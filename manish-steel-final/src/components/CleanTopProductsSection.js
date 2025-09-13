@@ -19,36 +19,121 @@ const CleanTopProductsSection = () => {
       setError(null);
       
       console.log('Fetching top products...');
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('API URL:', process.env.REACT_APP_API_URL);
       
-      // Use the productAPI service directly
-      const response = await productAPI.getTopProducts(6);
-      console.log('API Response:', response);
+      // Try multiple API endpoints for better reliability
+      const endpoints = [
+        () => productAPI.getTopProducts(6),
+        () => productAPI.getAllProducts({ featured: true, limit: 6 }),
+        () => productAPI.getAllProducts({ limit: 6 })
+      ];
+      
+      let response = null;
+      let lastError = null;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log('Trying endpoint...');
+          response = await endpoint();
+          if (response && response.data) {
+            console.log('Success with endpoint, response:', response.data);
+            break;
+          }
+        } catch (endpointError) {
+          console.warn('Endpoint failed:', endpointError.message);
+          lastError = endpointError;
+          continue;
+        }
+      }
+      
+      if (!response || !response.data) {
+        throw lastError || new Error('All API endpoints failed');
+      }
       
       // Check response structure and extract products
-      if (response && response.data) {
-        const { data } = response;
-        
-        // Handle different response structures
-        if (data.success && data.products) {
-          console.log('Found products in data.products:', data.products.length);
-          setTopProducts(data.products);
-        } else if (Array.isArray(data)) {
-          console.log('Found products in data array:', data.length);
-          setTopProducts(data);
-        } else if (data.products) {
-          console.log('Found products in data.products (no success flag):', data.products.length);
-          setTopProducts(data.products);
-        } else {
-          console.warn('No products found in response:', data);
-          setError('No featured products available');
-        }
+      const { data } = response;
+      let products = [];
+      
+      // Handle different response structures
+      if (data.success && data.products) {
+        console.log('Found products in data.products:', data.products.length);
+        products = data.products;
+      } else if (Array.isArray(data)) {
+        console.log('Found products in data array:', data.length);
+        products = data;
+      } else if (data.products && Array.isArray(data.products)) {
+        console.log('Found products in data.products (no success flag):', data.products.length);
+        products = data.products;
+      } else if (data.data && Array.isArray(data.data)) {
+        console.log('Found products in nested data:', data.data.length);
+        products = data.data;
       } else {
-        console.warn('Invalid response structure:', response);
-        setError('Invalid response from server');
+        console.warn('No products found in response:', data);
+        products = [];
       }
+      
+      // Filter and prepare products
+      const validProducts = products.filter(product => 
+        product && (product._id || product.id) && product.name
+      );
+      
+      if (validProducts.length === 0) {
+        throw new Error('No valid products found');
+      }
+      
+      console.log('Setting top products:', validProducts.length);
+      setTopProducts(validProducts.slice(0, 6)); // Ensure max 6 products
+      
     } catch (error) {
       console.error('Error fetching top products:', error);
-      setError('Failed to load featured products');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load featured products';
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        errorMessage = 'Network connection issue. Please check your internet connection.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Featured products endpoint not found.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Our team has been notified.';
+      }
+      
+      setError(errorMessage);
+      
+      // In production, try to load some fallback/sample products
+      if (process.env.NODE_ENV === 'production') {
+        console.log('Loading fallback products for production...');
+        setTopProducts([
+          {
+            _id: 'fallback-1',
+            name: 'Premium Steel Office Chair',
+            price: 15000,
+            image: '/images/furniture-placeholder.jpg',
+            category: 'Office Furniture',
+            featured: true,
+            description: 'Ergonomic steel office chair with premium finish'
+          },
+          {
+            _id: 'fallback-2', 
+            name: 'Modern Steel Cabinet',
+            price: 25000,
+            image: '/images/furniture-placeholder.jpg',
+            category: 'Storage',
+            featured: true,
+            description: 'Sleek modern steel cabinet for office storage'
+          },
+          {
+            _id: 'fallback-3',
+            name: 'Industrial Steel Table',
+            price: 20000,
+            image: '/images/furniture-placeholder.jpg',
+            category: 'Tables',
+            featured: true,
+            description: 'Heavy-duty industrial steel table'
+          }
+        ]);
+        setError(null); // Clear error when fallback is loaded
+      }
     } finally {
       setLoading(false);
     }

@@ -22,6 +22,30 @@ const ProductCard = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Safety check for product data
+  if (!product) {
+    console.warn('ProductCard: No product data provided');
+    return null;
+  }
+
+  // Ensure required product properties exist
+  const safeProduct = {
+    _id: product._id || product.id || 'unknown',
+    id: product.id || product._id || 'unknown',
+    name: product.name || 'Unnamed Product',
+    price: product.price || 0,
+    image: product.image || product.images?.[0] || '/images/furniture-placeholder.jpg',
+    category: product.category || 'Furniture',
+    description: product.description || '',
+    rating: product.rating || 4.5,
+    inStock: product.inStock !== undefined ? product.inStock : true,
+    isNew: product.isNew || false,
+    discount: product.discount || null,
+    featured: product.featured || false,
+    salesCount: product.salesCount || salesCount || null,
+    ...product // Spread original product to keep any additional properties
+  };
+
   // Handle image loading
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -36,9 +60,9 @@ const ProductCard = ({
   const handleProductClick = (e) => {
     e.preventDefault();
     if (onProductView) {
-      onProductView(product._id || product.id);
+      onProductView(safeProduct._id || safeProduct.id);
     } else {
-      navigate(`/products/${product._id || product.id}`);
+      navigate(`/products/${safeProduct._id || safeProduct.id}`);
       scrollToTop({ instant: true });
     }
   };
@@ -137,11 +161,11 @@ const ProductCard = ({
           </div>
         )}
 
-        <Link to={`/products/${product._id || product.id}`} onClick={handleProductClick} className="block w-full h-full">
+        <Link to={`/products/${safeProduct._id || safeProduct.id}`} onClick={handleProductClick} className="block w-full h-full">
           <OptimizedImage
-            src={imageError ? '/images/furniture-placeholder.jpg' : (product.image || product.images?.[0])}
-            alt={ImageService.getImageAlt(product)}
-            category={product.category}
+            src={imageError ? '/images/furniture-placeholder.jpg' : safeProduct.image}
+            alt={ImageService.getImageAlt(safeProduct)}
+            category={safeProduct.category}
             size="medium"
             className={`w-full h-full transition-all duration-500 group-hover:scale-105 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -158,7 +182,7 @@ const ProductCard = ({
             <button
               onClick={(e) => {
                 e.preventDefault();
-                onQuickView(product);
+                onQuickView(safeProduct);
               }}
               className="bg-white text-gray-800 px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-gray-50 shadow-lg font-medium"
             >
@@ -191,7 +215,7 @@ const ProductCard = ({
           {/* Standard badges */}
           {showBadges && !config.simpleLayout && (
             <>
-              {product.inStock ? (
+              {safeProduct.inStock ? (
                 <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                   In Stock
                 </span>
@@ -201,24 +225,24 @@ const ProductCard = ({
                 </span>
               )}
               
-              {product.isNew && (
+              {safeProduct.isNew && (
                 <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                   New
                 </span>
               )}
 
-              {product.discount && (
+              {safeProduct.discount && (
                 <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                  {product.discount}% Off
+                  {safeProduct.discount}% Off
                 </span>
               )}
             </>
           )}
 
           {/* Category badge for gallery */}
-          {config.simpleLayout && (product.category || product.description) && (
+          {config.simpleLayout && (safeProduct.category || safeProduct.description) && (
             <span className="inline-block px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
-              {product.category || product.description}
+              {safeProduct.category || safeProduct.description}
             </span>
           )}
         </div>
@@ -229,7 +253,7 @@ const ProductCard = ({
           {config.showSalesCount && (
             <div className="bg-white/95 text-gray-800 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
               <FaShoppingCart className="h-3 w-3" />
-              {formatSalesCount(product.salesCount)} sold
+              {formatSalesCount(safeProduct.salesCount)} sold
             </div>
           )}
 
@@ -239,7 +263,7 @@ const ProductCard = ({
               title="Add to Wishlist"
               onClick={(e) => {
                 e.preventDefault();
-                onProductLike?.(product);
+                onProductLike?.(safeProduct);
               }}
               className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-primary hover:text-white transition-all duration-300 text-gray-600 opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100"
               aria-label="Add to wishlist"
@@ -262,39 +286,39 @@ const ProductCard = ({
         /* Simple layout for gallery */
         <div className="p-4">
           <h4 className="font-semibold text-gray-900 truncate">
-            {product.title || product.name || 'Product'}
+            {safeProduct.title || safeProduct.name || 'Product'}
           </h4>
         </div>
       ) : (
         /* Full layout for other variants */
         <div className="p-4 sm:p-6">
-          {showCategory && product.category && !config.hideCategory && (
+          {showCategory && safeProduct.category && !config.hideCategory && (
             <div className="mb-1">
               <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-                {product.subcategory || product.category}
+                {safeProduct.subcategory || safeProduct.category}
               </span>
             </div>
           )}
           
-          <Link to={`/products/${product._id || product.id}`} onClick={handleProductClick} className="block">
+          <Link to={`/products/${safeProduct._id || safeProduct.id}`} onClick={handleProductClick} className="block">
             <h3 className="text-sm sm:text-lg font-semibold text-gray-800 hover:text-primary transition-colors mb-2 line-clamp-2 leading-tight">
-              {product.name || product.title}
+              {safeProduct.name || safeProduct.title}
             </h3>
           </Link>
 
-          {product.description && variant === 'featured' && (
+          {safeProduct.description && variant === 'featured' && (
             <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-              {product.description}
+              {safeProduct.description}
             </p>
           )}
 
           {/* Rating */}
-          {!config.hideRating && (product.rating || variant === 'featured' || variant === 'bestseller') && (
+          {!config.hideRating && (safeProduct.rating || variant === 'featured' || variant === 'bestseller') && (
             <div className="mb-3">
-              {renderRating(product.rating)}
+              {renderRating(safeProduct.rating)}
               {variant === 'bestseller' && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Based on {product.reviewCount || '50+'} customer reviews
+                  Based on {safeProduct.reviewCount || '50+'} customer reviews
                 </p>
               )}
             </div>
@@ -305,19 +329,19 @@ const ProductCard = ({
             <div className="flex items-center justify-between mb-2">
               <div>
                 <span className="text-primary font-bold text-lg sm:text-xl">
-                  {formatPrice(product.price)}
+                  {formatPrice(safeProduct.price)}
                 </span>
                 
-                {(product.oldPrice || product.originalPrice) && (
+                {(safeProduct.oldPrice || safeProduct.originalPrice) && (
                   <span className="text-gray-500 line-through text-sm ml-2">
-                    {formatPrice(product.oldPrice || product.originalPrice)}
+                    {formatPrice(safeProduct.oldPrice || safeProduct.originalPrice)}
                   </span>
                 )}
               </div>
               
               {(variant === 'featured' || variant === 'bestseller') && (
                 <Link
-                  to={`/products/${product._id || product.id}`}
+                  to={`/products/${safeProduct._id || safeProduct.id}`}
                   className={config.buttonClass}
                 >
                   {config.buttonText}
@@ -343,9 +367,9 @@ const ProductCard = ({
           {/* Stock status for bestseller */}
           {variant === 'bestseller' && (
             <div className="mt-3 text-center">
-              {product.stock && product.stock < 10 ? (
+              {safeProduct.stock && safeProduct.stock < 10 ? (
                 <span className="text-red-600 text-xs font-semibold">
-                  ⚠️ Only {product.stock} left in stock!
+                  ⚠️ Only {safeProduct.stock} left in stock!
                 </span>
               ) : (
                 <span className="text-green-600 text-xs font-semibold">
