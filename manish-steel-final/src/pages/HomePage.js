@@ -120,7 +120,7 @@ const HomePage = () => {
   return (
     <div>
       {/* Hero Section with Image on Right */}
-      <section className="py-16 bg-background overflow-hidden">
+      <section className="min-h-[85vh] flex items-center justify-center bg-background overflow-hidden py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             {/* Left Content */}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaStar, FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 import { productAPI } from '../services/productService';
+import ProductCard from './ProductCard';
 
 const CleanTopProductsSection = () => {
   const [topProducts, setTopProducts] = useState([]);
@@ -51,27 +52,6 @@ const CleanTopProductsSection = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatPrice = (price) => {
-    if (!price) return 'Price on request';
-    return `Rs. ${price.toLocaleString()}`;
-  };
-
-  const renderRating = (rating = 4.5) => {
-    return (
-      <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, index) => (
-          <FaStar
-            key={index}
-            className={`h-3 w-3 ${
-              index < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <span className="text-xs text-gray-600 ml-1">({rating})</span>
-      </div>
-    );
   };
 
   if (loading) {
@@ -131,59 +111,16 @@ const CleanTopProductsSection = () => {
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {topProducts.length > 0 ? topProducts.map((product, index) => (
-            <div 
-              key={product._id || product.id} 
-              className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
-            >
-              {/* Product Image */}
-              <div className="relative h-64 overflow-hidden">
-                <img
-                  src={product.image || '/images/furniture-placeholder.jpg'}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  onError={(e) => {
-                    e.target.src = '/images/furniture-placeholder.jpg';
-                  }}
-                />
-                
-                {/* Featured Badge */}
-                <div className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-semibold">
-                  ⭐ Featured
-                </div>
-              </div>
-
-              {/* Product Info */}
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-                
-                {product.description && (
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {product.description}
-                  </p>
-                )}
-
-                {/* Rating */}
-                <div className="mb-3">
-                  {renderRating(product.rating)}
-                </div>
-
-                {/* Price and Action */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-primary">
-                    {formatPrice(product.price)}
-                  </span>
-                  <Link
-                    to={`/products/${product._id || product.id}`}
-                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition-colors flex items-center gap-2 text-sm"
-                  >
-                    View Details
-                    <FaArrowRight className="h-3 w-3" />
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <ProductCard
+              key={product._id || product.id}
+              product={product}
+              variant="featured"
+              showBadges={true}
+              showCategory={true}
+              withActions={true}
+              className="animate-fadeInUp"
+              style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
+            />
           )) : (
             <div className="col-span-full text-center py-8">
               <p className="text-gray-600">No featured products available</p>
