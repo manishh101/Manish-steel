@@ -1,16 +1,17 @@
 import React from 'react';
 import ProductCard from './ProductCard';
+import QuickView from './QuickView';
+import useQuickView from '../hooks/useQuickView';
 
 // Demo component to showcase all ProductCard variants
 const ProductCardDemo = () => {
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
+  
   const sampleProduct = {
     _id: '1',
     name: 'Premium Steel Cabinet',
     category: 'Office Furniture',
     description: 'High-quality steel cabinet perfect for modern offices',
-    price: 15000,
-    oldPrice: 18000,
-    rating: 4.5,
     image: '/images/cabinet-sample.jpg',
     inStock: true,
     isNew: true,
@@ -18,10 +19,6 @@ const ProductCardDemo = () => {
     salesCount: 150,
     reviewCount: 75,
     stock: 5
-  };
-
-  const handleQuickView = (product) => {
-    console.log('Quick view:', product.name);
   };
 
   const handleProductView = (productId) => {
@@ -43,9 +40,8 @@ const ProductCardDemo = () => {
           <ProductCard
             product={sampleProduct}
             variant="standard"
-            onQuickView={handleQuickView}
+            onQuickView={openQuickView}
             onProductLike={handleProductLike}
-            showBadges={true}
             showCategory={true}
             withActions={true}
           />
@@ -57,9 +53,8 @@ const ProductCardDemo = () => {
           <ProductCard
             product={sampleProduct}
             variant="featured"
-            onQuickView={handleQuickView}
+            onQuickView={openQuickView}
             onProductLike={handleProductLike}
-            showBadges={true}
             showCategory={true}
             withActions={true}
           />
@@ -73,9 +68,8 @@ const ProductCardDemo = () => {
             variant="bestseller"
             rank={0}
             salesCount={sampleProduct.salesCount}
-            onQuickView={handleQuickView}
+            onQuickView={openQuickView}
             onProductLike={handleProductLike}
-            showBadges={true}
             showCategory={true}
             withActions={true}
           />
@@ -93,7 +87,6 @@ const ProductCardDemo = () => {
             }}
             variant="gallery"
             onProductView={handleProductView}
-            showBadges={false}
             showCategory={false}
             withActions={false}
           />
@@ -134,6 +127,14 @@ const ProductCardDemo = () => {
           </div>
         </div>
       </div>
+
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="standard"
+      />
     </div>
   );
 };

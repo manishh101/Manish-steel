@@ -1,7 +1,11 @@
 import React from 'react';
 import ProductCard from './ProductCard';
+import QuickView from './QuickView';
+import useQuickView from '../hooks/useQuickView';
 
 const CategorySection = ({ title, description, products }) => {
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
+
   return (
     <div className="py-8">
       <h2 className="text-2xl font-bold text-primary mb-3">{title}</h2>
@@ -12,13 +16,28 @@ const CategorySection = ({ title, description, products }) => {
         {products.map((product, index) => (
           <ProductCard
             key={index}
-            title={product.title}
-            image={product.image}
-            description={product.description}
-            onClick={product.onClick}
+            product={{
+              _id: product.id || index,
+              name: product.title,
+              image: product.image,
+              description: product.description,
+              category: product.category || 'Furniture'
+            }}
+            onQuickView={openQuickView}
+            withActions={true}
+            showCategory={true}
+            variant="standard"
           />
         ))}
       </div>
+
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="standard"
+      />
     </div>
   );
 };

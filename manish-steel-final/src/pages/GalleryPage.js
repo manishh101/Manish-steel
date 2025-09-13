@@ -14,6 +14,8 @@ import { testimonials } from '../data/testimonials';
 import GalleryCard from '../components/GalleryCard';
 import GalleryListItem from '../components/GalleryListItem';
 import ProductCard from '../components/ProductCard';
+import QuickView from '../components/QuickView';
+import useQuickView from '../hooks/useQuickView';
 
 // Custom CSS for the gallery
 import './gallery-page.css';
@@ -64,6 +66,7 @@ const GalleryPage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [retryCount, setRetryCount] = useState(0);
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
   
   // Product detail states
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -993,9 +996,9 @@ const GalleryPage = () => {
                     product={product}
                     variant="gallery"
                     onProductView={handleProductClick}
-                    showBadges={false}
+                    onQuickView={openQuickView}
                     showCategory={false}
-                    withActions={false}
+                    withActions={true}
                     className="animate-fadeInUp"
                     style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
                   />
@@ -1335,6 +1338,14 @@ const GalleryPage = () => {
         images={galleryModalImages}
         initialIndex={galleryModalInitialIndex}
         productName={galleryModalTitle}
+      />
+
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="gallery"
       />
     </div>
   );

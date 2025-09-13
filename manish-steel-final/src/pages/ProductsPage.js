@@ -19,6 +19,8 @@ import { useOptimizedProducts } from '../hooks/useOptimizedProducts';
 import { useCategoryNavigation } from '../hooks/useCategoryNavigation';
 import { scrollToTop, forceScrollToTop, ScrollHandlers } from '../utils/scrollUtils';
 import ProductCard from '../components/ProductCard';
+import QuickView from '../components/QuickView';
+import useQuickView from '../hooks/useQuickView';
 import ImageService from '../services/imageService';
 import OptimizedImage from '../components/common/OptimizedImage';
 
@@ -47,7 +49,7 @@ const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
   const [sortDrawerVisible, setSortDrawerVisible] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
   const [loadedImages, setLoadedImages] = useState({});
   
   const location = useLocation();
@@ -84,38 +86,13 @@ const ProductsPage = () => {
     setSortDrawerVisible(!sortDrawerVisible);
   };
   
-  // Open quick view modal for a product
-  const openQuickView = (product) => {
-    setQuickViewProduct(product);
-    document.body.style.overflow = 'hidden';
-  };
-
-  // Close quick view modal
-  const closeQuickView = () => {
-    setQuickViewProduct(null);
-    document.body.style.overflow = 'unset';
-  };
+  // No need for manual quick view handlers - using the hook
   
-  // Handle background click for modal
-  const handleModalBackgroundClick = (e) => {
-    if (e.target === e.currentTarget) {
-      closeQuickView();
-    }
-  };
-
-  // Handle product view details
+  // Handle view details click
   const handleViewDetails = (productId) => {
-    if (!productId) return;
-    closeQuickView();
-    
-    const formattedId = productId.toString().replace(/^p/, '');
-    navigate(`/products/${formattedId}`);
-    
-    // Ensure we scroll to top when navigating to product details
+    navigate(`/products/${productId}`);
     scrollToTop({ instant: true });
-  };
-
-  // Cleanup scroll lock on unmount
+  };  // Cleanup scroll lock on unmount
   useEffect(() => {
     return () => {
       document.body.style.overflow = 'unset';
@@ -615,141 +592,13 @@ const ProductsPage = () => {
         </div>
       )}
 
-      {/* Enhanced Quick View Modal */}
-      {quickViewProduct && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
-          onClick={handleModalBackgroundClick}
-        >
-          <div className="bg-white rounded-xl max-w-5xl w-full max-h-[95vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-4 md:p-6 border-b bg-gray-50">
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-900">Quick View</h3>
-              <button
-                onClick={closeQuickView}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-200 rounded-full"
-              >
-                <FaTimes className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="p-4 md:p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                {/* Enhanced Image Section */}
-                <div className="space-y-4">
-                  <div className="relative group">
-                    <OptimizedImage
-                      src={quickViewProduct.image || (quickViewProduct.images && quickViewProduct.images[0])}
-                      alt={ImageService.getImageAlt(quickViewProduct)}
-                      category={quickViewProduct.category}
-                      size="large"
-                      className="w-full h-64 md:h-80 lg:h-96 rounded-xl shadow-md transition-transform group-hover:scale-105"
-                      lazy={false}
-                      onLoad={(e) => setLoadedImages(prev => ({...prev, [quickViewProduct._id || quickViewProduct.id]: true}))}
-                    />
-                    {/* Full Screen View Button */}
-                    <button
-                      onClick={() => {
-                        const imgSrc = ImageService.getOptimizedImageUrl(
-                          quickViewProduct.image || (quickViewProduct.images && quickViewProduct.images[0]),
-                          { category: quickViewProduct.category, width: 1600, height: 1600 }
-                        );
-                        const newWindow = window.open('', '_blank');
-                        newWindow.document.write(`
-                          <html>
-                            <head><title>${quickViewProduct.name}</title></head>
-                            <body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center; min-height:100vh;">
-                              <img src="${imgSrc}" style="max-width:100%; max-height:100%; object-fit:contain;" alt="${quickViewProduct.name}">
-                            </body>
-                          </html>
-                        `);
-                      }}
-                      className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100"
-                    >
-                      <FaEye className="h-4 w-4" />
-                    </button>
-                  </div>
-                  
-                  {/* Additional Images Preview (if available) */}
-                  {quickViewProduct.images && quickViewProduct.images.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto">
-                      {quickViewProduct.images.slice(0, 4).map((image, index) => (
-                        <OptimizedImage
-                          key={index}
-                          src={image}
-                          alt={`${quickViewProduct.name} ${index + 1}`}
-                          category={quickViewProduct.category}
-                          size="thumbnail"
-                          className="w-16 h-16 rounded-lg border-2 border-gray-200 hover:border-primary cursor-pointer transition-colors flex-shrink-0"
-                          lazy={false}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Enhanced Product Details */}
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                      {quickViewProduct.name}
-                    </h4>
-                    
-                    {quickViewProduct.category && (
-                      <div className="mb-3">
-                        <span className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                          {quickViewProduct.category}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <p className="text-gray-600 mb-6 leading-relaxed">
-                      {quickViewProduct.description || "High-quality furniture crafted with precision and care."}
-                    </p>
-                    
-                    {quickViewProduct.features && (
-                      <div className="mb-6">
-                        <h5 className="font-semibold text-gray-900 mb-2">Features:</h5>
-                        <ul className="text-gray-600 space-y-1">
-                          {quickViewProduct.features.slice(0, 3).map((feature, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <div className="mb-6">
-                      <span className="text-3xl md:text-4xl font-bold text-primary">
-                        Rs. {quickViewProduct.price?.toLocaleString() || quickViewProduct.price}
-                      </span>
-                      {quickViewProduct.originalPrice && quickViewProduct.originalPrice > quickViewProduct.price && (
-                        <span className="text-lg text-gray-500 line-through ml-3">
-                          Rs. {quickViewProduct.originalPrice.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={() => handleViewDetails(quickViewProduct._id || quickViewProduct.id)}
-                      className="flex-1 bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 font-medium"
-                    >
-                      View Full Details
-                    </button>
-                    
-                    <button className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:border-primary hover:text-primary transition-all duration-300 group">
-                      <FaHeart className="h-5 w-5 group-hover:text-red-500 transition-colors" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="standard"
+      />
     </div>
   );
 };

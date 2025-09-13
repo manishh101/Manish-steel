@@ -3,15 +3,20 @@ import { Link } from 'react-router-dom';
 import { FaArrowRight } from 'react-icons/fa';
 import { productAPI } from '../services/productService';
 import ProductCard from './ProductCard';
+import QuickView from './QuickView';
+import useQuickView from '../hooks/useQuickView';
 
 const CleanTopProductsSection = () => {
   const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
 
   useEffect(() => {
     fetchTopProducts();
   }, []);
+
+  // No need for manual quick view handlers - using the hook
 
   const fetchTopProducts = async () => {
     try {
@@ -109,67 +114,55 @@ const CleanTopProductsSection = () => {
         {
           _id: 'fallback-1',
           name: 'Premium Steel Office Chair',
-          price: 15000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Office Furniture',
           featured: true,
           description: 'Ergonomic steel office chair with premium finish',
-          rating: 4.8,
           inStock: true
         },
         {
           _id: 'fallback-2', 
           name: 'Modern Steel Cabinet',
-          price: 25000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Storage',
           featured: true,
           description: 'Sleek modern steel cabinet for office storage',
-          rating: 4.6,
           inStock: true
         },
         {
           _id: 'fallback-3',
           name: 'Industrial Steel Table',
-          price: 20000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Tables',
           featured: true,
           description: 'Heavy-duty industrial steel table',
-          rating: 4.7,
           inStock: true
         },
         {
           _id: 'fallback-4',
           name: 'Steel Storage Rack',
-          price: 12000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Storage',
           featured: true,
           description: 'Multi-tier steel storage rack',
-          rating: 4.5,
           inStock: true
         },
         {
           _id: 'fallback-5',
           name: 'Executive Steel Desk',
-          price: 35000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Office Furniture',
           featured: true,
           description: 'Executive steel desk with drawers',
-          rating: 4.9,
           inStock: true
         },
         {
           _id: 'fallback-6',
           name: 'Steel Bookshelf',
-          price: 18000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Storage',
           featured: true,
           description: 'Durable steel bookshelf for offices',
-          rating: 4.4,
           inStock: true
         }
       ]);
@@ -234,23 +227,20 @@ const CleanTopProductsSection = () => {
         </div>
 
         {/* Products Grid */}
+                {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {topProducts.length > 0 ? topProducts.map((product, index) => (
+          {topProducts.map((product, index) => (
             <ProductCard
               key={product._id || product.id}
               product={product}
               variant="featured"
-              showBadges={true}
               showCategory={true}
               withActions={true}
+              onQuickView={openQuickView}
               className="animate-fadeInUp"
               style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
             />
-          )) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-600">No featured products available</p>
-            </div>
-          )}
+          ))}
         </div>
 
         {/* View All Button */}
@@ -264,6 +254,14 @@ const CleanTopProductsSection = () => {
           </Link>
         </div>
       </div>
+
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="featured"
+      />
     </section>
   );
 };

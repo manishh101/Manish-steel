@@ -235,7 +235,14 @@ const HomePage = () => {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((index) => (
-                <div key={index} className="bg-gray-200 rounded-lg h-80 animate-pulse"></div>
+                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="aspect-[4/3] bg-gray-200 animate-pulse"></div>
+                  <div className="p-6">
+                    <div className="bg-gray-200 h-6 rounded mb-2 animate-pulse"></div>
+                    <div className="bg-gray-200 h-4 rounded mb-4 w-3/4 animate-pulse"></div>
+                    <div className="bg-gray-200 h-8 rounded w-1/3 animate-pulse"></div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -247,7 +254,7 @@ const HomePage = () => {
                     className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group"
                     style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
                   >
-                    <div className="h-64 overflow-hidden relative">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden">
                       {categoryThumbnails[category._id || category.id] ? (
                         // Use actual product image from the category's products
                         <OptimizedImage 
@@ -292,7 +299,7 @@ const HomePage = () => {
                 // Fallback categories for instant display
                 <>
                   <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.1s'}}>
-                    <div className="h-64 overflow-hidden relative">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden">
                       {/* This will be called when fallback categories are shown */}
                       <OptimizedImage
                         src={categoryThumbnails['684c14969550362979fd95a2'] || '/placeholders/Household-Furniture.png'}
@@ -327,7 +334,7 @@ const HomePage = () => {
                   </div>
                   
                   <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.2s'}}>
-                    <div className="h-64 overflow-hidden relative">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden">
                       <OptimizedImage 
                         src={categoryThumbnails['684c14969550362979fd95a3'] || '/placeholders/Office-Products.png'} 
                         alt="Office Furniture" 
@@ -361,7 +368,7 @@ const HomePage = () => {
                   </div>
                   
                   <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.3s'}}>
-                    <div className="h-64 overflow-hidden relative">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden">
                       <OptimizedImage 
                         src={categoryThumbnails['684c14969550362979fd95a4'] || '/placeholders/Commercial-Shelving.png'} 
                         alt="Commercial Furniture" 

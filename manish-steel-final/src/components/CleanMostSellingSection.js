@@ -3,15 +3,20 @@ import { Link } from 'react-router-dom';
 import { FaArrowRight, FaFire } from 'react-icons/fa';
 import { productAPI } from '../services/productService';
 import ProductCard from './ProductCard';
+import QuickView from './QuickView';
+import useQuickView from '../hooks/useQuickView';
 
 const CleanMostSellingSection = () => {
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
 
   useEffect(() => {
     fetchBestSellingProducts();
   }, []);
+
+  // No need for manual quick view handlers - using the hook
 
   const fetchBestSellingProducts = async () => {
     try {
@@ -106,48 +111,40 @@ const CleanMostSellingSection = () => {
         {
           _id: 'bestseller-1',
           name: 'Popular Steel Desk Chair',
-          price: 13000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Office Furniture',
           bestseller: true,
           description: 'Most popular steel desk chair for offices',
-          rating: 4.7,
           inStock: true,
           salesCount: 150
         },
         {
           _id: 'bestseller-2',
           name: 'Top-Selling Steel Shelf',
-          price: 16000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Storage',
           bestseller: true,
           description: 'Best-selling steel shelf unit',
-          rating: 4.6,
           inStock: true,
           salesCount: 120
         },
         {
           _id: 'bestseller-3',
           name: 'Hot Steel File Cabinet',
-          price: 22000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Storage',
           bestseller: true,
           description: 'Top-rated steel file cabinet',
-          rating: 4.8,
           inStock: true,
           salesCount: 95
         },
         {
           _id: 'bestseller-4',
           name: 'Best Steel Work Table',
-          price: 19000,
           image: '/images/furniture-placeholder.jpg',
           category: 'Tables',
           bestseller: true,
           description: 'Most ordered steel work table',
-          rating: 4.5,
           inStock: true,
           salesCount: 85
         }
@@ -225,9 +222,9 @@ const CleanMostSellingSection = () => {
               variant="bestseller"
               rank={index}
               salesCount={product.salesCount}
-              showBadges={true}
               showCategory={true}
               withActions={true}
+              onQuickView={openQuickView}
               className="animate-fadeInUp"
               style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
             />
@@ -246,6 +243,14 @@ const CleanMostSellingSection = () => {
           </Link>
         </div>
       </div>
+
+      {/* Quick View Modal */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="bestseller"
+      />
     </section>
   );
 };
