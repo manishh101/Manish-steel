@@ -5,7 +5,11 @@ import { productAPI } from '../services/api';
 import { scrollToTop } from '../utils/scrollUtils';
 import ImageService from '../services/imageService';
 import OptimizedImage from '../components/common/OptimizedImage';
+import ProductCard from '../components/ProductCard';
+import QuickView from '../components/QuickView';
+import useQuickView from '../hooks/useQuickView';
 import { defaultProductImages } from '../utils/productPlaceholders';
+import { defaultProducts } from '../utils/productData';
 
 // Only used as last-resort fallbacks when database images are not available
 const defaultImages = defaultProductImages;
@@ -34,6 +38,15 @@ const ProductDetailPage = () => {
   const [touchPosition, setTouchPosition] = useState(null);
   const [fullScreenView, setFullScreenView] = useState(false);
   const imageContainerRef = useRef(null);
+  
+  // Related products state
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const relatedProductsRef = useRef(null);
+  
+  // Quick view functionality
+  const { quickViewProduct, isQuickViewOpen, openQuickView, closeQuickView } = useQuickView();
 
   // Get all available images with priority on database Cloudinary URLs
   // Enhanced to ensure we can handle exactly 4 images from the database
@@ -317,6 +330,179 @@ const ProductDetailPage = () => {
     setTouchPosition(null);
   };
 
+  // Carousel navigation functions for related products
+  const getProductsPerView = () => {
+    if (window.innerWidth >= 1024) return 4; // lg: 4 products
+    if (window.innerWidth >= 768) return 3;  // md: 3 products
+    return 2; // sm: 2 products
+  };
+
+  const getTotalSlides = () => {
+    const productsPerView = getProductsPerView();
+    return Math.max(0, Math.ceil(relatedProducts.length - productsPerView) + 1);
+  };
+
+  const nextSlide = () => {
+    const totalSlides = getTotalSlides();
+    if (currentSlide < totalSlides - 1) {
+      setCurrentSlide(prev => prev + 1);
+      scrollToSlide(currentSlide + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+      scrollToSlide(currentSlide - 1);
+    }
+  };
+
+  const scrollToSlide = (slideIndex) => {
+    if (relatedProductsRef.current) {
+      const productsPerView = getProductsPerView();
+      const cardWidth = relatedProductsRef.current.children[0]?.offsetWidth || 0;
+      const gap = 16; // gap-4 = 16px
+      const scrollDistance = slideIndex * (cardWidth + gap);
+      
+      relatedProductsRef.current.scrollTo({
+        left: scrollDistance,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Handle window resize for responsive carousel
+  useEffect(() => {
+    const handleResize = () => {
+      // Reset to first slide on resize to avoid layout issues
+      setCurrentSlide(0);
+      if (relatedProductsRef.current) {
+        relatedProductsRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Function to fetch related products based on category
+  const fetchRelatedProducts = async (currentProduct) => {
+    try {
+      setRelatedLoading(true);
+      console.log(`Fetching related products for category: ${currentProduct?.category || 'unknown'}`);
+      
+      let products = [];
+      
+      // Strategy 1: Try to get products from the same category
+      if (currentProduct?.category) {
+        try {
+          const categoryResponse = await productAPI.getByCategory(currentProduct.category, { limit: 12 });
+          if (categoryResponse?.data) {
+            // Handle different response structures for category-based fetch
+            if (Array.isArray(categoryResponse.data)) {
+              products = categoryResponse.data;
+            } else if (categoryResponse.data.products) {
+              products = categoryResponse.data.products;
+            }
+          }
+          console.log(`Category-based fetch returned ${products.length} products`);
+        } catch (categoryError) {
+          console.warn('Category-based fetch failed:', categoryError.message);
+        }
+      }
+      
+      // Strategy 2: If no products found or very few, get general products
+      if (products.length < 8) {
+        try {
+          console.log('Fetching general products as fallback...');
+          const generalResponse = await productAPI.getAll(1, 24);
+          let allProducts = [];
+          
+          if (generalResponse?.data) {
+            // Handle different response structures for general fetch
+            if (Array.isArray(generalResponse.data)) {
+              allProducts = generalResponse.data;
+            } else if (generalResponse.data.products) {
+              allProducts = generalResponse.data.products;
+            } else if (generalResponse.data.data) {
+              allProducts = generalResponse.data.data;
+            }
+          }
+          
+          console.log(`General fetch returned ${allProducts.length} products`);
+          
+          // If we have category products, supplement them; otherwise use all general products
+          if (products.length > 0) {
+            // Add non-duplicate products from general fetch
+            const currentIds = products.map(p => p._id || p.id);
+            const additionalProducts = allProducts.filter(p => 
+              !currentIds.includes(p._id || p.id) && 
+              (p._id || p.id) !== (currentProduct._id || currentProduct.id)
+            );
+            products = [...products, ...additionalProducts];
+          } else {
+            products = allProducts;
+          }
+        } catch (generalError) {
+          console.warn('General products fetch failed:', generalError.message);
+        }
+      }
+      
+      // Filter out the current product and ensure we have valid products
+      const validProducts = products
+        .filter(p => p && (p._id || p.id) && p.name) // Ensure product has required properties
+        .filter(p => (p._id || p.id) !== (currentProduct._id || currentProduct.id)) // Remove current product
+        .slice(0, 12); // Limit to 12 products for carousel
+      
+      console.log(`Final related products count: ${validProducts.length}`);
+      
+      // Strategy 3: If still no products found, use default products as absolute fallback
+      if (validProducts.length === 0) {
+        console.log('Using default products as absolute fallback');
+        const fallbackProducts = defaultProducts
+          .filter(p => p && p.id && p.name) // Ensure valid product structure
+          .slice(0, 8); // Take first 8 default products for carousel
+        
+        // Transform default products to match expected structure
+        const transformedProducts = fallbackProducts.map(product => ({
+          ...product,
+          _id: product.id, // Ensure _id exists for consistency
+          image: product.images?.[0] || '/images/furniture-placeholder.jpg',
+          category: product.categoryId || 'Furniture',
+          inStock: true // Default to in stock
+        }));
+        
+        setRelatedProducts(transformedProducts);
+        console.log(`Set ${transformedProducts.length} fallback products`);
+      } else {
+        setRelatedProducts(validProducts);
+      }
+      
+      // Reset carousel position when new products are loaded
+      setCurrentSlide(0);
+      
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      // Use default products as fallback when everything fails
+      console.log('Using default products due to error');
+      const fallbackProducts = defaultProducts
+        .filter(p => p && p.id && p.name)
+        .slice(0, 8)
+        .map(product => ({
+          ...product,
+          _id: product.id,
+          image: product.images?.[0] || '/images/furniture-placeholder.jpg',
+          category: product.categoryId || 'Furniture',
+          inStock: true
+        }));
+      
+      setRelatedProducts(fallbackProducts);
+      setCurrentSlide(0); // Reset slide position
+    } finally {
+      setRelatedLoading(false);
+    }
+  };
+
   // Fetch product from API with improved image handling
   // Enhanced to validate we're correctly handling 4 images per product
   useEffect(() => {
@@ -366,6 +552,9 @@ const ProductDetailPage = () => {
         
         setProduct(product);
         setLoading(false);
+        
+        // Always fetch related products after main product loads
+        fetchRelatedProducts(product);
         
         // Ensure we scroll to top when product loads
         scrollToTop({ instant: true });
@@ -881,145 +1070,113 @@ const ProductDetailPage = () => {
           </div>
         </div>
         
-        {/* You might also like - Related Products */}
+        {/* You might also like - Related Products Carousel */}
         <div className="mt-10">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">You might also like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {(() => {
-              // Create an array of indices for different images to display
-              const relatedIndices = [];
-              const titles = [
-                "Similar Style", 
-                "You may like", 
-                "Also consider", 
-                "Popular choice"
-              ];
-
-              // Use the same approach as thumbnails for consistency
-              // Case 1: We have at least 4 images - use the first 4 unique ones
-              if (allImages.length >= 4) {
-                relatedIndices.push(0, 1, 2, 3);
-              } 
-              // Case 2: We have 3 images - use all 3 plus a variant of the first image
-              else if (allImages.length === 3) {
-                relatedIndices.push(0, 1, 2, 'v0-1'); // 3 real images + 1 variant
-              }
-              // Case 3: We have 2 images - use both plus variants of each
-              else if (allImages.length === 2) {
-                relatedIndices.push(0, 1, 'v0-1', 'v1-1'); // 2 real images + 2 variants
-              }
-              // Case 4: We have 1 image - use it plus three different variants
-              else if (allImages.length === 1) {
-                relatedIndices.push(0, 'v0-1', 'v0-2', 'v0-3'); // 1 real image + 3 variants
-              }
-              // Case 5: No real images - use 4 default images or variants
-              else {
-                relatedIndices.push('d0', 'd1', 'd2', 'd3'); // Use all 4 default images
-              }
-              
-              return relatedIndices.map((indexKey, displayIndex) => {
-                // Determine the image URL and other properties based on the index key
-                let imageUrl;
-                let isPlaceholder = false;
-                let variantStyle = {};
-                let variantClass = '';
-                
-                if (typeof indexKey === 'number') {
-                  // Regular number index - direct image from allImages array
-                  imageUrl = allImages[indexKey];
-                } 
-                else if (typeof indexKey === 'string' && indexKey.startsWith('v')) {
-                  // Variant of a real image: v0-1, v0-2, etc.
-                  const parts = indexKey.substring(1).split('-');
-                  const baseIndex = parseInt(parts[0], 10);
-                  const variantNum = parseInt(parts[1], 10);
-                  
-                  // Make sure baseIndex is valid
-                  const safeBaseIndex = baseIndex < allImages.length ? baseIndex : 0;
-                  
-                  // Use a different image for each position when possible
-                  if (allImages.length >= 2) {
-                    // When we have at least 2 images, select a different one for each position
-                    const rotatedIndex = (safeBaseIndex + variantNum) % allImages.length;
-                    imageUrl = allImages[rotatedIndex];
-                  } else {
-                    // When we only have 1 image, use it with visual variations
-                    imageUrl = allImages[safeBaseIndex];
-                  }
-                  
-                  isPlaceholder = false; // These are real images with style variations
-                  variantStyle = getPlaceholderStyle(variantNum);
-                  
-                  // Add visual differentiation through CSS classes
-                  switch(variantNum) {
-                    case 1: variantClass = 'object-cover scale-110'; break;
-                    case 2: variantClass = 'object-contain rotate-3'; break;
-                    case 3: variantClass = 'object-cover scale-125'; break;
-                    default: variantClass = '';
-                  }
-                }
-                else if (typeof indexKey === 'string' && indexKey.startsWith('d')) {
-                  // Default image: d0, d1, d2, d3
-                  // Extract the index number from d0, d1, etc.
-                  const index = parseInt(indexKey.substring(1), 10);
-                  // Use modulo to ensure we don't go out of bounds
-                  const safeIndex = index % defaultImages.length;
-                  
-                  // Use the default image, but try to use a different one for each position
-                  imageUrl = defaultImages[safeIndex];
-                  
-                  // For the related products section we want different thumbnails
-                  isPlaceholder = false; // For UI purposes, don't show placeholder overlay
-                  
-                  // Apply different styles to make default images look visually distinct
-                  variantStyle = getPlaceholderStyle(index % 4 + 1);
-                  
-                  // Add visual differentiation
-                  switch(index % 4) {
-                    case 0: variantClass = 'object-contain'; break;
-                    case 1: variantClass = 'object-cover'; break;
-                    case 2: variantClass = 'object-cover scale-110'; break;
-                    case 3: variantClass = 'object-contain scale-90 rotate-2'; break;
-                    default: variantClass = 'object-cover';
-                  }
-                }
-                
-                return (
-                  <Link 
-                    key={`related-${displayIndex}`}
-                    to="/products" 
-                    className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
-                  >
-                    <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                      <OptimizedImage 
-                        src={imageUrl} 
-                        alt={`Related product - ${titles[displayIndex]}`}
-                        category={product?.category}
-                        size="small"
-                        className={`w-full h-full group-hover:scale-105 transition-transform duration-300 ${variantClass}`}
-                        style={variantStyle}
-                        lazy={true}
-                      />
-                      {/* Use a more subtle indicator for different product suggestions */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-12 opacity-0 group-hover:opacity-70 transition-opacity duration-300">
-                        <div className="absolute bottom-2 left-2 text-white text-xs font-medium">
-                          {displayIndex + 1} / 4
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
-                        {titles[displayIndex]} {isPlaceholder ? '(similar)' : ''}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-1">View similar items</p>
-                    </div>
-                  </Link>
-                );
-              });
-            })()}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">You might also like</h2>
           </div>
+          
+          {relatedLoading ? (
+            // Loading skeleton for related products
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-gray-200"></div>
+                  <div className="p-4">
+                    <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                    <div className="bg-gray-200 h-3 rounded w-3/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : relatedProducts.length > 0 ? (
+            // Carousel container with side navigation
+            <div className="relative mx-12">
+              {/* Left Navigation Arrow - only show if not at beginning */}
+              {relatedProducts.length > getProductsPerView() && currentSlide > 0 && (
+                <button
+                  onClick={prevSlide}
+                  className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200"
+                  aria-label="Previous products"
+                >
+                  <FaChevronLeft className="h-5 w-5" />
+                </button>
+              )}
+              
+              {/* Right Navigation Arrow - only show if there are more slides */}
+              {relatedProducts.length > getProductsPerView() && currentSlide < getTotalSlides() - 1 && (
+                <button
+                  onClick={nextSlide}
+                  className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200"
+                  aria-label="Next products"
+                >
+                  <FaChevronRight className="h-5 w-5" />
+                </button>
+              )}
+              
+              <div 
+                ref={relatedProductsRef}
+                className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide"
+              >
+                {relatedProducts.map((relatedProduct) => (
+                  <div
+                    key={relatedProduct._id || relatedProduct.id}
+                    className="flex-none w-[calc(50%-8px)] md:w-[calc(33.333%-11px)] lg:w-[calc(25%-12px)]"
+                  >
+                    <ProductCard
+                      product={relatedProduct}
+                      onQuickView={openQuickView}
+                      variant="standard"
+                      showCategory={false}
+                      withActions={true}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Slide indicators */}
+              {relatedProducts.length > getProductsPerView() && (
+                <div className="flex justify-center mt-4 gap-2">
+                  {Array.from({ length: getTotalSlides() }, (_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setCurrentSlide(index);
+                        scrollToSlide(index);
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        currentSlide === index
+                          ? 'bg-primary w-6'
+                          : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            // This should rarely happen now with the robust fallback system
+            <div className="text-center py-8 text-gray-500">
+              <p>Loading related products...</p>
+              <Link 
+                to="/products" 
+                className="inline-block mt-2 text-primary hover:text-primary/80 font-medium"
+              >
+                Browse all products →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* QuickView Modal for related products */}
+      <QuickView
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={closeQuickView}
+        variant="standard"
+      />
     </div>
   );
 };
