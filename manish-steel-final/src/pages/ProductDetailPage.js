@@ -196,9 +196,9 @@ const ProductDetailPage = () => {
         setImageLoading(true);
         setSelectedImageIndex(newIndex);
       } else if (e.key === 'Escape') {
-        // Exit zoom mode with Escape key
-        if (isZoomed) {
-          setIsZoomed(false);
+        // Exit full screen view with Escape key
+        if (fullScreenView) {
+          setFullScreenView(false);
         }
       }
     };
@@ -211,7 +211,7 @@ const ProductDetailPage = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedImageIndex, allImages.length, isZoomed]);
+  }, [selectedImageIndex, allImages.length, fullScreenView]);
   
   // Add scroll restoration on image change or zoom
   useEffect(() => {
@@ -272,28 +272,24 @@ const ProductDetailPage = () => {
     setSelectedImageIndex(newIndex);
   };
   
-  // Enhanced image zoom functionality with better UX
+  // Enhanced image full screen functionality
   const handleImageZoom = () => {
-    setIsZoomed(!isZoomed);
+    setFullScreenView(true);
+  };
+
+  // Handle full screen close
+  const handleFullScreenClose = () => {
+    setFullScreenView(false);
   };
   
   const handleMouseMove = (e) => {
-    if (!isZoomed || !imageContainerRef.current) return;
-    
-    const container = imageContainerRef.current;
-    const rect = container.getBoundingClientRect();
-    
-    // Calculate position percentage with boundaries
-    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-    
-    setZoomPosition({ x, y });
+    // Mouse move functionality removed since we're using full screen instead of zoom
+    return;
   };
   
   const handleMouseLeave = () => {
-    if (isZoomed) {
-      setIsZoomed(false);
-    }
+    // Mouse leave functionality removed since we're using full screen instead of zoom
+    return;
   };
   
   // Handle touch events for better mobile support
@@ -654,26 +650,15 @@ const ProductDetailPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Product Images Section - Simplified and more user friendly */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Main Product Image Viewer */}
             <div 
               className="relative rounded-lg overflow-hidden bg-white shadow-md"
               ref={imageContainerRef}
             >
-              {/* Back button for mobile - always visible */}
-              <Link
-                to="/products"
-                onClick={handleBackToProducts}
-                className="absolute top-4 left-4 z-20 flex items-center justify-center bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full w-10 h-10 shadow-md transition-all duration-200"
-              >
-                <FaArrowLeft className="text-gray-700" />
-              </Link>
-              
               {/* Main image display area with touch support */}
               <div 
                 className="relative w-full aspect-square bg-gray-50 flex items-center justify-center touch-manipulation"
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -708,215 +693,46 @@ const ProductDetailPage = () => {
                   alt={ImageService.getImageAlt(product) || "Product Image"}
                   category={product?.category}
                   size="large"
-                  className={`w-full h-full transition-all duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'} ${isZoomed ? 'cursor-zoom-out scale-150' : 'cursor-zoom-in'}`}
-                  style={isZoomed ? { transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%` } : {}}
+                  className={`w-full h-full transition-all duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'} cursor-pointer`}
                   onLoad={() => setImageLoading(false)}
                   onClick={handleImageZoom}
                   lazy={false}
                 />
                 
-                {/* Image counter badge - showing actual count of images from database */}
-                <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 text-white text-sm px-3 py-1 rounded-full flex items-center space-x-1">
-                  <span className="font-medium">{selectedImageIndex + 1}</span>
-                  <span>/</span> 
-                  <span>{Math.min(allImages.length, 4)}</span>
-                </div>
-                
-                {/* Action buttons */}
-                <div className="absolute top-4 right-4 flex space-x-2">
-                  {/* Zoom button */}
-                  <button 
-                    onClick={handleImageZoom} 
-                    className="bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full w-10 h-10 flex items-center justify-center shadow-md transition-all duration-200"
-                    aria-label={isZoomed ? "Exit zoom" : "Zoom image"}
-                  >
-                    {isZoomed ? <FaTimes className="text-gray-700" /> : <FaSearchPlus className="text-gray-700" />}
-                  </button>
-                </div>
-                
-                {/* Tap to zoom hint for mobile - disappears after first use */}
-                <div className="absolute inset-x-0 bottom-16 flex justify-center pointer-events-none">
-                  <div className="bg-black bg-opacity-70 text-white text-xs px-3 py-1 rounded-full flex items-center">
-                    <FaInfoCircle className="mr-1" /> Tap image to zoom
-                  </div>
-                </div>
-              </div>
-              
-              {/* Thumbnail strip - showing all available database images up to 4 */}
-              <div className="bg-white w-full flex justify-center p-2 border-t border-gray-100">
-                <div className="flex space-x-3 justify-center overflow-x-auto max-w-full no-scrollbar py-2">
-                  {(() => {
-                    // Create an array of unique image indices to use
-                    // Show all available database images (up to 4)
-                    let imageIndices = [];
-                    
-                    // We prioritize showing actual database images 
-                    // The database has 4 images per product, so we should have 4 images here
-                    if (allImages.length >= 1) {
-                      // Use all available real images, up to 4
-                      for (let i = 0; i < Math.min(allImages.length, 4); i++) {
-                        imageIndices.push(i);
-                      }
-                      
-                      console.log(`Showing ${imageIndices.length} image thumbnails from database`);
-                    } 
-                    // Fallback if no images at all
-                    else {
-                      imageIndices = ['d0']; // Use a default image as last resort
-                      console.warn('No images available, using default placeholder');
-                    }
-                    
-                    return imageIndices.map((indexKey, displayIndex) => {
-                      // Determine the image URL and other properties based on the index key
-                      let imageUrl;
-                      let imageIndex;
-                      let isPlaceholder = false;
-                      let variantStyle = {};
-                      let variantClass = '';
-                      
-                      if (typeof indexKey === 'number') {
-                        // Regular number index - direct image from allImages array
-                        imageUrl = allImages[indexKey];
-                        imageIndex = indexKey;
-                      } 
-                      else if (typeof indexKey === 'string' && indexKey.startsWith('v')) {
-                        // Variant of a real image: v0-1, v0-2, etc.
-                        const parts = indexKey.substring(1).split('-');
-                        const baseIndex = parseInt(parts[0], 10);
-                        const variantNum = parseInt(parts[1], 10);
-                        
-                        // Make sure we have a valid base image to work with
-                        const availableImages = allImages.length > 0 ? allImages : defaultImages;
-                        const safeBaseIndex = baseIndex % availableImages.length;
-                        
-                        // For variants, try to use a different real image if available
-                        if (allImages.length >= 2) {
-                          // When we have multiple images, use different ones for variants
-                          const rotatedIndex = (safeBaseIndex + variantNum) % allImages.length;
-                          imageUrl = allImages[rotatedIndex];
-                          imageIndex = rotatedIndex;
-                        } else {
-                          // When we only have one image or none, use the default image with styling
-                          imageUrl = availableImages[safeBaseIndex];
-                          imageIndex = 0;
-                        }
-                        
-                        // Apply visual variations based on position
-                        isPlaceholder = false;
-                        switch (variantNum) {
-                          case 1:
-                            variantStyle = { filter: 'brightness(1.1) contrast(1.1)' };
-                            variantClass = 'object-cover scale-110';
-                            break;
-                          case 2:
-                            variantStyle = { filter: 'sepia(0.3) brightness(1.05)' };
-                            variantClass = 'object-cover scale-105 rotate-1';
-                            break;
-                          case 3:
-                            variantStyle = { filter: 'hue-rotate(5deg) brightness(1.05)' };
-                            variantClass = 'object-cover scale-110 -rotate-1';
-                            break;
-                          default:
-                            variantStyle = {};
-                            variantClass = 'object-cover';
-                        }
-                        
-                        // Add visual differentiation through CSS classes
-                        switch(variantNum) {
-                          case 1: variantClass = 'object-cover scale-110'; break;
-                          case 2: variantClass = 'object-contain rotate-5'; break;
-                          case 3: variantClass = 'object-cover scale-125'; break;
-                          default: variantClass = '';
-                        }
-                      }
-                      else if (typeof indexKey === 'string' && indexKey.startsWith('d')) {
-                        // Default image: d0, d1, d2, d3
-                        const index = parseInt(indexKey.substring(1), 10);
-                        const safeIndex = index % defaultImages.length;
-                        
-                        // Always use a valid default image
-                        imageUrl = defaultImages[safeIndex];
-                        imageIndex = 0; // Default to first image position
-                        
-                        // Apply different styles to make default images look unique
-                        switch (index % 4) {
-                          case 0:
-                            variantStyle = { filter: 'none' };
-                            variantClass = 'object-cover';
-                            break;
-                          case 1:
-                            variantStyle = { filter: 'brightness(1.1) contrast(1.1)' };
-                            variantClass = 'object-cover scale-110';
-                            break;
-                          case 2:
-                            variantStyle = { filter: 'sepia(0.2) brightness(1.05)' };
-                            variantClass = 'object-cover scale-105 rotate-1';
-                            break;
-                          case 3:
-                            variantStyle = { filter: 'brightness(0.95) contrast(1.1)' };
-                            variantClass = 'object-cover scale-110 -rotate-1';
-                            break;
-                        }
-                        
-                        isPlaceholder = false;
-                        
-                        // Apply different styles to make default images look visually distinct
-                        variantStyle = getPlaceholderStyle(index % 4 + 1);
-                        
-                        // Add visual differentiation
-                        switch(index % 4) {
-                          case 0: variantClass = 'object-contain'; break;
-                          case 1: variantClass = 'object-cover'; break;
-                          case 2: variantClass = 'object-cover scale-110'; break;
-                          case 3: variantClass = 'object-contain scale-90 rotate-2'; break;
-                          default: variantClass = 'object-cover';
-                        }
-                      }
-                      
-                      return (
-                        <button
-                          key={`thumb-${displayIndex}`}
-                          onClick={() => handleThumbnailClick(imageIndex)}
-                          className={`flex-shrink-0 w-16 h-16 rounded-md transition-all duration-200 ${
-                            selectedImageIndex === imageIndex
-                              ? 'ring-2 ring-primary scale-105 shadow-md' 
-                              : 'ring-1 ring-gray-200 hover:opacity-100 hover:shadow-sm hover:scale-105'
-                          }`}
-                          aria-label={`View product image ${displayIndex + 1}`}
-                        >
-                          <div className="w-full h-full overflow-hidden rounded-md relative bg-gray-50">
-                            {/* Background color added for visibility */}
-                            <OptimizedImage
-                              src={imageUrl}
-                              alt={`Product view ${displayIndex + 1}`}
-                              category={product?.category}
-                              size="small"
-                              className={`w-full h-full ${variantClass}`}
-                              style={variantStyle}
-                              onLoad={() => {
-                                console.log("Image loaded:", imageUrl);
-                                // Clear loading state when image loads
-                                if (displayIndex === selectedImageIndex) {
-                                  setImageLoading(false);
-                                }
-                              }}
-                              lazy={false}
-                            />
-                            {selectedImageIndex === imageIndex && (
-                              <div className="absolute inset-0 border-2 border-primary rounded-md"></div>
-                            )}
-                            {/* Always visible number indicator */}
-                            <div className="absolute bottom-0 right-0 bg-white bg-opacity-70 px-1 text-xs font-medium text-gray-800">
-                              {displayIndex + 1}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    });
-                  })()}
-                </div>
+                {/* Enlarge button - positioned in bottom left corner */}
+                <button 
+                  onClick={handleImageZoom} 
+                  className="absolute bottom-4 left-4 bg-black bg-opacity-60 hover:bg-opacity-80 rounded-full w-10 h-10 flex items-center justify-center shadow-md transition-all duration-200 z-10"
+                  aria-label="View full screen"
+                >
+                  <FaExpand className="text-white text-sm" />
+                </button>
               </div>
             </div>
+            {/* Enhanced Thumbnail Container - larger, more professional */}
+            {allImages.length > 1 && (
+              <div className="flex space-x-6 justify-center p-4 bg-white rounded-xl shadow-md border border-gray-100">
+                {allImages.slice(0, 4).map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`w-32 h-32 rounded-xl border-2 transition-all duration-200 bg-gray-50 shadow-sm hover:shadow-lg ${selectedImageIndex === idx ? 'border-primary ring-2 ring-primary' : 'border-gray-200 hover:border-primary'}`}
+                    aria-label={`View product image ${idx + 1}`}
+                  >
+                    <div className="w-full h-full overflow-hidden rounded-xl relative">
+                      <OptimizedImage
+                        src={img}
+                        alt={`Product view ${idx + 1}`}
+                        category={product?.category}
+                        size="thumbnail"
+                        className="w-full h-full object-cover"
+                        lazy={false}
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details Section - Enhanced for better UX */}
@@ -1177,6 +993,72 @@ const ProductDetailPage = () => {
         onClose={closeQuickView}
         variant="standard"
       />
+      
+      {/* Full Screen Image Overlay */}
+      {fullScreenView && (
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center"
+          onClick={handleFullScreenClose}
+        >
+          {/* Close button */}
+          <button
+            onClick={handleFullScreenClose}
+            className="absolute top-4 right-4 z-60 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-12 h-12 flex items-center justify-center text-white transition-all duration-200"
+            aria-label="Close full screen"
+          >
+            <FaTimes className="text-xl" />
+          </button>
+          
+          {/* Navigation buttons in full screen */}
+          {allImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevImage();
+                }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-12 h-12 flex items-center justify-center text-white transition-all duration-200 z-60"
+                aria-label="Previous image"
+              >
+                <FaChevronLeft className="text-xl" />
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextImage();
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-12 h-12 flex items-center justify-center text-white transition-all duration-200 z-60"
+                aria-label="Next image"
+              >
+                <FaChevronRight className="text-xl" />
+              </button>
+            </>
+          )}
+          
+          {/* Full screen image */}
+          <div 
+            className="max-w-full max-h-full p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <OptimizedImage
+              src={allImages[selectedImageIndex]}
+              alt={ImageService.getImageAlt(product) || "Product Image"}
+              category={product?.category}
+              size="large"
+              className="max-w-full max-h-full object-contain"
+              lazy={false}
+            />
+          </div>
+          
+          {/* Image counter in full screen */}
+          {allImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+              {selectedImageIndex + 1} / {allImages.length}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
