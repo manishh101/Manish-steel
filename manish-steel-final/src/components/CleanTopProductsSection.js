@@ -78,6 +78,9 @@ const CleanTopProductsSection = () => {
         product && (product._id || product.id) && product.name
       );
       
+      console.log('Valid products found:', validProducts.length);
+      console.log('Valid products:', validProducts.map(p => ({ id: p._id || p.id, name: p.name })));
+      
       if (validProducts.length === 0) {
         throw new Error('No valid products found');
       }
@@ -100,40 +103,77 @@ const CleanTopProductsSection = () => {
       
       setError(errorMessage);
       
-      // In production, try to load some fallback/sample products
-      if (process.env.NODE_ENV === 'production') {
-        console.log('Loading fallback products for production...');
-        setTopProducts([
-          {
-            _id: 'fallback-1',
-            name: 'Premium Steel Office Chair',
-            price: 15000,
-            image: '/images/furniture-placeholder.jpg',
-            category: 'Office Furniture',
-            featured: true,
-            description: 'Ergonomic steel office chair with premium finish'
-          },
-          {
-            _id: 'fallback-2', 
-            name: 'Modern Steel Cabinet',
-            price: 25000,
-            image: '/images/furniture-placeholder.jpg',
-            category: 'Storage',
-            featured: true,
-            description: 'Sleek modern steel cabinet for office storage'
-          },
-          {
-            _id: 'fallback-3',
-            name: 'Industrial Steel Table',
-            price: 20000,
-            image: '/images/furniture-placeholder.jpg',
-            category: 'Tables',
-            featured: true,
-            description: 'Heavy-duty industrial steel table'
-          }
-        ]);
-        setError(null); // Clear error when fallback is loaded
-      }
+      // Load fallback/sample products when API fails
+      console.log('Loading fallback products...');
+      setTopProducts([
+        {
+          _id: 'fallback-1',
+          name: 'Premium Steel Office Chair',
+          price: 15000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Office Furniture',
+          featured: true,
+          description: 'Ergonomic steel office chair with premium finish',
+          rating: 4.8,
+          inStock: true
+        },
+        {
+          _id: 'fallback-2', 
+          name: 'Modern Steel Cabinet',
+          price: 25000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Storage',
+          featured: true,
+          description: 'Sleek modern steel cabinet for office storage',
+          rating: 4.6,
+          inStock: true
+        },
+        {
+          _id: 'fallback-3',
+          name: 'Industrial Steel Table',
+          price: 20000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Tables',
+          featured: true,
+          description: 'Heavy-duty industrial steel table',
+          rating: 4.7,
+          inStock: true
+        },
+        {
+          _id: 'fallback-4',
+          name: 'Steel Storage Rack',
+          price: 12000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Storage',
+          featured: true,
+          description: 'Multi-tier steel storage rack',
+          rating: 4.5,
+          inStock: true
+        },
+        {
+          _id: 'fallback-5',
+          name: 'Executive Steel Desk',
+          price: 35000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Office Furniture',
+          featured: true,
+          description: 'Executive steel desk with drawers',
+          rating: 4.9,
+          inStock: true
+        },
+        {
+          _id: 'fallback-6',
+          name: 'Steel Bookshelf',
+          price: 18000,
+          image: '/images/furniture-placeholder.jpg',
+          category: 'Storage',
+          featured: true,
+          description: 'Durable steel bookshelf for offices',
+          rating: 4.4,
+          inStock: true
+        }
+      ]);
+      setError(null); // Clear error when fallback is loaded
     } finally {
       setLoading(false);
     }
