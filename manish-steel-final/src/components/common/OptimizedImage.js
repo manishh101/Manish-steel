@@ -36,47 +36,28 @@ const OptimizedImage = ({
     tall: 'aspect-[3/4]'
   };
 
-  // Get optimized image source - prioritize database images
+  // Get optimized image source - prioritize Cloudinary URLs
   const getOptimizedSrc = () => {
-    // No src provided - use placeholder only as a last resort
+    // No src provided - use Cloudinary placeholder
     if (!src) {
-      console.warn('Missing image source, using placeholder for category:', category);
-      return ImageService.getPlaceholderImage(category);
+      console.warn('Missing image source, using Cloudinary placeholder for category:', category);
+      return ImageService.getCloudinaryPlaceholder(category);
     }
     
-    // Use actual image from source (should be a Cloudinary URL from database)
+    // Use ImageService to get the optimized URL
     const optimizedUrl = ImageService.getOptimizedImageUrl(src, {
       ...sizeConfig[size],
       category
     });
     
-    // Log if using a placeholder instead of an actual image
-    if (ImageService.isPlaceholder(optimizedUrl)) {
-      console.warn('Using placeholder instead of actual image for:', src);
-    }
-    
+    console.log('Production-ready optimized URL:', optimizedUrl);
     return optimizedUrl;
   };
 
-  // Get fallback source - used only when primary source fails to load
+  // Get fallback source - use Cloudinary placeholder for production
   const getFallbackSrc = () => {
-    // Try to use the original source with different parameters first
-    if (src && !ImageService.isPlaceholder(src)) {
-      const retryUrl = ImageService.getOptimizedImageUrl(src, {
-        ...sizeConfig[size],
-        quality: 'auto:low', // Try a lower quality version first
-        category
-      });
-      
-      if (retryUrl !== src) {
-        console.log('Trying alternative optimization for:', src);
-        return retryUrl;
-      }
-    }
-    
-    // If that doesn't work, fall back to a placeholder
-    console.warn('Falling back to placeholder image for category:', category);
-    return ImageService.getPlaceholderImage(category);
+    console.warn('Image failed to load, using Cloudinary placeholder for category:', category);
+    return ImageService.getCloudinaryPlaceholder(category);
   };
 
   // Intersection Observer for lazy loading
@@ -117,11 +98,15 @@ const OptimizedImage = ({
     console.warn('Image failed to load:', failedSrc);
     
     // Check if this was already a placeholder - if so, don't try to load another placeholder
-    const wasAlreadyPlaceholder = ImageService.isPlaceholder(failedSrc);
+    const wasAlreadyPlaceholder = failedSrc && (
+      failedSrc.includes('/placeholders/') ||
+      failedSrc.includes('sample.jpg') ||
+      failedSrc.includes('l_text:') // Cloudinary text overlay placeholder
+    );
     
     if (wasAlreadyPlaceholder) {
       console.error('Even placeholder image failed to load:', failedSrc);
-      // Just mark as loaded to avoid infinite error loop
+      // Just mark as loaded with error to avoid infinite error loop
       setImageState(prev => ({ 
         ...prev, 
         error: true,
@@ -133,9 +118,9 @@ const OptimizedImage = ({
       console.log('Using fallback image:', fallbackSrc);
       setImageState(prev => ({ 
         ...prev, 
-        error: true, 
+        error: false, // Reset error since we're trying a new image
         currentSrc: fallbackSrc,
-        loaded: true
+        loaded: false // Reset loaded to show loading state for placeholder
       }));
     }
     
@@ -179,12 +164,8 @@ const OptimizedImage = ({
         />
       )}
 
-      {/* Error state indicator */}
-      {imageState.error && (
-        <div className="absolute top-2 right-2 bg-red-100 text-red-600 px-2 py-1 rounded text-xs">
-          Fallback
-        </div>
-      )}
+      {/* Error state indicator - Hidden for better UX */}
+      {/* Removed fallback indicator to provide cleaner gallery experience */}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight, FaImages } from 'react-icons/fa';
 import { scrollToTop } from '../utils/scrollUtils';
 import ImageService from '../services/imageService';
 import OptimizedImage from './common/OptimizedImage';
@@ -27,12 +27,41 @@ const ProductCard = ({
     return null;
   }
 
+  // Get the main product image - prioritize Cloudinary URLs
+  const getMainProductImage = () => {
+    // Priority order for finding the main image:
+    // 1. product.src (often the optimized main image)
+    // 2. product.image 
+    // 3. first image from product.images array
+    // 4. fallback placeholder
+    
+    const potentialImages = [
+      product.src,
+      product.image,
+      product.images?.[0],
+      product.thumbnail,
+      product.mainImage
+    ].filter(Boolean);
+
+    // Find the first valid image URL
+    for (const img of potentialImages) {
+      if (typeof img === 'string' && img.trim()) {
+        return img.trim();
+      } else if (typeof img === 'object' && (img.url || img.src)) {
+        return img.url || img.src;
+      }
+    }
+    
+    // Return null to let OptimizedImage handle the fallback
+    return null;
+  };
+
   // Ensure required product properties exist
   const safeProduct = {
     _id: product._id || product.id || 'unknown',
     id: product.id || product._id || 'unknown',
-    name: product.name || 'Unnamed Product',
-    image: product.image || product.images?.[0] || '/images/furniture-placeholder.jpg',
+    name: product.name || product.title || 'Unnamed Product',
+    image: getMainProductImage(),
     category: product.category || 'Furniture',
     description: product.description || '',
     inStock: product.inStock !== undefined ? product.inStock : true,
@@ -57,7 +86,12 @@ const ProductCard = ({
   const handleProductClick = (e) => {
     e.preventDefault();
     if (onProductView) {
-      onProductView(safeProduct._id || safeProduct.id);
+      // For gallery variant, pass the full product object instead of just ID
+      if (variant === 'gallery') {
+        onProductView(safeProduct);
+      } else {
+        onProductView(safeProduct._id || safeProduct.id);
+      }
     } else {
       navigate(`/products/${safeProduct._id || safeProduct.id}`);
       scrollToTop({ instant: true });
@@ -108,16 +142,17 @@ const ProductCard = ({
 
         <Link to={`/products/${safeProduct._id || safeProduct.id}`} onClick={handleProductClick} className="block w-full h-full">
           <OptimizedImage
-            src={imageError ? '/images/furniture-placeholder.jpg' : safeProduct.image}
+            src={safeProduct.image}
             alt={ImageService.getImageAlt(safeProduct)}
             category={safeProduct.category}
             size="medium"
-            className={`w-full h-full transition-all duration-500 group-hover:scale-105 ${
+            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={handleImageLoad}
             onError={handleImageError}
             lazy={true}
+            priority={variant === 'featured'}
           />
         </Link>
         
@@ -173,9 +208,15 @@ const ProductCard = ({
 
         {/* Gallery overlay */}
         {config.simpleLayout && (
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="text-white text-center">
-              <span className="font-medium">View Images</span>
+          <div 
+            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer"
+            onClick={handleProductClick}
+          >
+            <div className="text-white text-center pointer-events-none transform -translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+                <FaImages className="mx-auto mb-1 text-lg" />
+                <span className="font-medium text-sm">View Images</span>
+              </div>
             </div>
           </div>
         )}
@@ -185,9 +226,14 @@ const ProductCard = ({
       {config.simpleLayout ? (
         /* Simple layout for gallery */
         <div className="p-4">
-          <h4 className="font-semibold text-gray-900 truncate">
-            {safeProduct.title || safeProduct.name || 'Product'}
+          <h4 className="font-semibold text-gray-900 line-clamp-2 leading-tight">
+            {safeProduct.name}
           </h4>
+          {safeProduct.category && (
+            <p className="text-sm text-gray-500 mt-1">
+              {safeProduct.category}
+            </p>
+          )}
         </div>
       ) : (
         /* Full layout for other variants */

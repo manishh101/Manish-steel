@@ -26,38 +26,40 @@ class ImageService {
     return `${baseUrl}/${transformString}/${publicId}`;
   }
 
+  // Production-ready Cloudinary placeholder
+  static getCloudinaryPlaceholder(category = 'Product') {
+    const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dwrrja8cz';
+    
+    // Use Cloudinary's built-in sample image with text overlay - this is guaranteed to exist
+    const categoryText = (category || 'Product').replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    
+    // Simple approach: use a solid color background that's generated dynamically
+    // This creates a 600x600 gray rectangle with the category text
+    const placeholderUrl = `https://res.cloudinary.com/${cloudName}/image/upload/w_600,h_600,c_fill,b_rgb:f3f4f6/l_text:Arial_36_bold_center:${encodeURIComponent(categoryText)},co_rgb:374151,g_center/v1/sample.jpg`;
+    
+    console.log('Generated reliable Cloudinary placeholder:', placeholderUrl);
+    return placeholderUrl;
+  }
+
   static getOptimizedImageUrl(imageUrl, options = {}) {
-    // If no image URL provided, use placeholder as last resort
+    // If no image URL provided, use Cloudinary placeholder
     if (!imageUrl) {
-      console.warn('No image URL provided, using placeholder for category:', options.category);
-      return this.getPlaceholderImage(options.category);
+      console.warn('No image URL provided, using Cloudinary placeholder for category:', options.category);
+      return this.getCloudinaryPlaceholder(options.category);
     }
 
     // Clean and normalize the URL
     const cleanUrl = imageUrl.trim();
 
-    // PRIORITY 1: Cloudinary URLs - optimized cloud delivery
+    // PRIORITY 1: Cloudinary URLs - fix double transformation and missing cloud names
     if (this.isCloudinaryUrl(cleanUrl)) {
-      return this.enhanceCloudinaryUrl(cleanUrl, options);
+      return this.fixCloudinaryUrl(cleanUrl, options);
     }
     
-    // PRIORITY 2: Absolute URLs (including server-hosted images)
-    if (cleanUrl.startsWith('http')) {
-      return cleanUrl;
-    }
-    
-    // PRIORITY 3: Server-hosted images via API (local uploads)
-    if (cleanUrl.startsWith('/uploads/')) {
-      const apiBaseUrl = this.getApiBaseUrl();
-      return `${apiBaseUrl}${cleanUrl}`;
-    }
-    
-    // PRIORITY 4: Relative paths - ensure proper formatting
-    if (!cleanUrl.startsWith('/')) {
-      return `/${cleanUrl}`;
-    }
-    
-    return cleanUrl;
+    // PRIORITY 2: Convert all other URLs to Cloudinary for production
+    // For production, we want everything to go through Cloudinary
+    console.log('Converting non-Cloudinary URL to Cloudinary:', cleanUrl);
+    return this.convertToCloudinaryUrl(cleanUrl, options);
   }
 
   static getApiBaseUrl() {
@@ -86,15 +88,78 @@ class ImageService {
   static enhanceCloudinaryUrl(url, options = {}) {
     const { width = 800, height = 600, quality = 'auto:good' } = options;
     
-    // Check if URL already has transformations
+    // If URL already has transformations, return as-is to avoid double transformation
+    if (url.includes('/upload/') && (url.includes('w_') || url.includes('c_'))) {
+      console.log('Cloudinary URL already has transformations, returning as-is:', url);
+      return url;
+    }
+    
+    // Only add transformations if URL doesn't have them
     if (url.includes('/upload/') && !url.includes('w_')) {
-      // Insert transformations into existing Cloudinary URL
-      return url.replace(
+      const transformedUrl = url.replace(
         '/upload/', 
         `/upload/w_${width},h_${height},q_${quality},f_auto,c_fill/`
       );
+      console.log('Added transformations to Cloudinary URL:', transformedUrl);
+      return transformedUrl;
     }
+    
     return url;
+  }
+
+  // Fix Cloudinary URLs that have issues
+  static fixCloudinaryUrl(url, options = {}) {
+    const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dwrrja8cz';
+    
+    // Fix URLs missing cloud name
+    if (url.includes('res.cloudinary.com/upload/')) {
+      console.log('Fixing Cloudinary URL missing cloud name:', url);
+      url = url.replace('res.cloudinary.com/upload/', `res.cloudinary.com/${cloudName}/image/upload/`);
+    }
+    
+    // If already has transformations, return as-is to avoid double transformation
+    if (url.includes('w_') && url.includes('h_') && url.includes('q_')) {
+      console.log('Cloudinary URL already optimized:', url);
+      return url;
+    }
+    
+    // Add transformations if missing
+    const { width = 800, height = 600, quality = 'auto:good' } = options;
+    
+    if (url.includes('/upload/') && !url.includes('w_')) {
+      const transformedUrl = url.replace(
+        '/upload/', 
+        `/upload/w_${width},h_${height},q_${quality},f_auto,c_fill/`
+      );
+      console.log('Added transformations to Cloudinary URL:', transformedUrl);
+      return transformedUrl;
+    }
+    
+    return url;
+  }
+
+  // Convert any URL to Cloudinary URL for production
+  static convertToCloudinaryUrl(originalUrl, options = {}) {
+    const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dwrrja8cz';
+    const { width = 800, height = 600, quality = 'auto:good' } = options;
+    
+    // Extract filename or use a generic identifier
+    let publicId = 'manish-steel/products/converted-image';
+    
+    if (originalUrl) {
+      // Try to extract meaningful filename
+      const urlParts = originalUrl.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      if (filename && filename.includes('.')) {
+        const nameWithoutExt = filename.split('.')[0];
+        publicId = `manish-steel/products/${nameWithoutExt}`;
+      }
+    }
+    
+    // Generate Cloudinary URL
+    const cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/image/upload/w_${width},h_${height},q_${quality},f_auto,c_fill/${publicId}`;
+    console.log('Converted to Cloudinary URL:', cloudinaryUrl);
+    return cloudinaryUrl;
   }
 
   static ensurePublicAssetUrl(url) {

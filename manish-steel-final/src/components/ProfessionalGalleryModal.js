@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './ProfessionalGalleryModal.css';
-import CloudinaryImageService from '../services/cloudinaryImageService';
+import ImageService from '../services/imageService';
+import OptimizedImage from './common/OptimizedImage';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProfessionalGalleryModal = ({ 
@@ -23,43 +24,32 @@ const ProfessionalGalleryModal = ({
   const touchEndX = useRef(null);
   const minSwipeDistance = 50; // Minimum distance in pixels to recognize as swipe
   
-  // Process images when they change
+  // Process images when they change - simplified to work with OptimizedImage component
   useEffect(() => {
     console.log('ProfessionalGalleryModal received images:', images);
     
     if (Array.isArray(images) && images.length > 0) {
-      // For debugging, check the raw image data first
       console.log('Raw image data examples:', 
                  images.slice(0, 3).map(img => typeof img === 'object' ? JSON.stringify(img) : img));
       
-      // Process images directly with minimal transformation
-      const processedUrls = images.map(img => {
-        // Handle different image formats
+      // Extract raw URLs and let OptimizedImage handle the Cloudinary optimization
+      const rawUrls = images.map(img => {
         if (!img) return null;
         
-        // Convert all images to direct URLs with minimal processing
         if (typeof img === 'string') {
-          // For Cloudinary URLs, ensure they are using HTTPS
-          if (img.includes('cloudinary.com') && img.startsWith('http:')) {
-            return img.replace('http:', 'https:');
-          }
-          return img; // Return string URLs directly
+          return img; // Return raw URL
         } else if (typeof img === 'object') {
-          // For objects, extract the URL using typical property names
-          const url = img.url || img.src || img.path || img.image || img.imageUrl || img.secure_url || '';
-          if (url.includes('cloudinary.com') && url.startsWith('http:')) {
-            return url.replace('http:', 'https:');
-          }
-          return url;
+          // Extract the URL from object
+          return img.url || img.src || img.path || img.image || img.imageUrl || img.secure_url || '';
         }
         return null;
       }).filter(Boolean); // Remove null/undefined entries
       
-      console.log('Raw processed URLs:', processedUrls.slice(0, 3));
+      console.log('Raw URLs for OptimizedImage:', rawUrls.slice(0, 3));
       
-      // Set images directly without further processing
-      setProcessedImages(processedUrls);
-      console.log('Image processing complete:', processedUrls.length);
+      // Set raw URLs - OptimizedImage will handle optimization
+      setProcessedImages(rawUrls);
+      console.log('Image processing complete:', rawUrls.length);
     } else {
       setProcessedImages([]);
       console.log('Gallery modal: No valid images provided');
@@ -113,6 +103,26 @@ const ProfessionalGalleryModal = ({
       return () => window.removeEventListener('keydown', handleKeyPress);
     }
   }, [isOpen, processedImages.length, onClose]);
+
+  // Add preload image function for error retry
+  const preloadImage = useCallback((index) => {
+    if (processedImages[index]) {
+      setIsLoading(true);
+      setImageLoadErrors(prev => {
+        const newErrors = new Set(prev);
+        newErrors.delete(index);
+        return newErrors;
+      });
+      
+      const img = new Image();
+      img.onload = () => setIsLoading(false);
+      img.onerror = () => {
+        handleImageError(index);
+        setIsLoading(false);
+      };
+      img.src = processedImages[index];
+    }
+  }, [processedImages]);
 
   const navigateNext = useCallback(() => {
     if (processedImages.length <= 1) return;
@@ -171,68 +181,12 @@ const ProfessionalGalleryModal = ({
     if (thumbnailsContainerRef.current) {
       scrollToThumbnail(currentIndex);
     }
-    
-    // Preload next and previous images for smoother navigation
-    if (processedImages.length > 1) {
-      const nextIndex = (currentIndex + 1) % processedImages.length;
-      const prevIndex = (currentIndex - 1 + processedImages.length) % processedImages.length;
-      
-      // Preload next image
-      if (processedImages[nextIndex]) {
-        const nextImg = new Image();
-        nextImg.src = getImageUrl(processedImages[nextIndex]);
-      }
-      
-      // Preload previous image
-      if (processedImages[prevIndex]) {
-        const prevImg = new Image();
-        prevImg.src = getImageUrl(processedImages[prevIndex]);
-      }
-    }
   };
 
   const handleImageError = (index) => {
     console.error(`Failed to load image at index ${index}`);
     setImageLoadErrors(prev => new Set(prev).add(index));
     setIsLoading(false);
-  };
-
-  // Add a fallback image mechanism
-  const handleFallbackImage = (e) => {
-    console.log('Image failed to load, attempting fallback');
-    // Try with a different approach - direct URL without transformations
-    const imgElement = e.target;
-    const currentSrc = imgElement.src;
-    
-    if (currentSrc.includes('res.cloudinary.com') && currentSrc.includes('upload/')) {
-      // Extract the base URL and public ID
-      const parts = currentSrc.split('/upload/');
-      if (parts.length === 2) {
-        const baseUrl = parts[0];
-        // Get the public ID, removing any transformations
-        const publicIdWithTransforms = parts[1];
-        const publicId = publicIdWithTransforms.includes('/') 
-          ? publicIdWithTransforms.substring(publicIdWithTransforms.indexOf('/') + 1)
-          : publicIdWithTransforms;
-          
-        // Set a simple URL with no transformations
-        const fallbackUrl = `${baseUrl}/upload/${publicId}`;
-        console.log('Using fallback URL:', fallbackUrl);
-        imgElement.src = fallbackUrl;
-        
-        // If this also fails, show error
-        imgElement.onerror = () => {
-          console.error('Fallback image also failed to load');
-          handleImageError(currentIndex);
-        };
-        
-        // Prevent infinite loop
-        return;
-      }
-    }
-    
-    // If we get here, we couldn't create a fallback URL
-    handleImageError(currentIndex);
   };
   
   // Touch event handlers
@@ -283,71 +237,7 @@ const ProfessionalGalleryModal = ({
     if (currentIndex !== index) {
       setCurrentIndex(index);
       setIsLoading(true);
-      
-      // Pre-load image to improve transition
-      const img = new Image();
-      img.src = processedImages[index];
-      
-      // Set a timeout in case image loading takes too long
-      const timeout = setTimeout(() => {
-        setIsLoading(false);
-      }, 3000); // 3 second timeout
-      
-      img.onload = () => {
-        clearTimeout(timeout);
-        setIsLoading(false);
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timeout);
-        handleImageError(index);
-        setIsLoading(false);
-      };
     }
-  };
-
-  const getImageUrl = (image) => {
-    if (!image) {
-      console.log('Empty image URL provided to getImageUrl');
-      return '';
-    }
-    
-    console.log('Processing image URL:', image);
-    
-    // Process URL through CloudinaryImageService for consistent handling
-    if (typeof image === 'string') {
-      // For direct cloudinary URLs, use them directly with minimal processing
-      if (image.includes('res.cloudinary.com')) {
-        console.log('Direct Cloudinary URL detected');
-        // Strip any transformations and apply our own
-        const baseUrl = image.split('/upload/')[0] + '/upload';
-        const publicId = image.split('/upload/')[1].split('?')[0];
-        
-        // Simple transformation that ensures full visibility
-        const optimizedUrl = `${baseUrl}/c_fit,w_1600,h_1600,q_auto:best/${publicId}`;
-        console.log('Optimized URL:', optimizedUrl);
-        return optimizedUrl;
-      }
-      
-      // Return any other string URLs as is
-      return image;
-    }
-    
-    // For object type images
-    const normalizedUrl = typeof image === 'object' && (image.url || image.src) 
-      ? (image.url || image.src) 
-      : '';
-      
-    if (normalizedUrl && normalizedUrl.includes('res.cloudinary.com')) {
-      // Apply the same direct transformation
-      const baseUrl = normalizedUrl.split('/upload/')[0] + '/upload';
-      const publicId = normalizedUrl.split('/upload/')[1].split('?')[0];
-      const optimizedUrl = `${baseUrl}/c_fit,w_1600,h_1600,q_auto:best/${publicId}`;
-      console.log('Object image optimized URL:', optimizedUrl);
-      return optimizedUrl;
-    }
-    
-    return normalizedUrl;
   };
 
   if (!isOpen || processedImages.length === 0) return null;
@@ -363,8 +253,13 @@ const ProfessionalGalleryModal = ({
            onTouchMove={handleTouchMove} 
            onTouchEnd={handleTouchEnd}>
         
-        {/* Header */}
-        <div className="gallery-header">
+        {/* Enhanced Header with better styling */}
+        <motion.div 
+          className="gallery-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="gallery-title">
             <h2>{productName}</h2>
             <span className="image-counter">
@@ -375,7 +270,8 @@ const ProfessionalGalleryModal = ({
             <button 
               className="control-btn thumbnail-toggle"
               onClick={() => setShowThumbnails(!showThumbnails)}
-              title="Toggle thumbnails"
+              title={`${showThumbnails ? 'Hide' : 'Show'} thumbnails`}
+              aria-label={`${showThumbnails ? 'Hide' : 'Show'} thumbnails`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
@@ -384,14 +280,15 @@ const ProfessionalGalleryModal = ({
             <button 
               className="control-btn close-btn" 
               onClick={onClose}
-              title="Close gallery"
+              title="Close gallery (ESC)"
+              aria-label="Close gallery"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
               </svg>
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Image Display with Sliding Animation */}
         <div 
@@ -401,23 +298,33 @@ const ProfessionalGalleryModal = ({
           onTouchEnd={handleTouchEnd}
         >
           <div className="slider-container">
-            <AnimatePresence initial={false} custom={slideDirection}>
+            <AnimatePresence initial={false} custom={slideDirection} mode="wait">
               <motion.div
                 key={currentIndex}
                 custom={slideDirection}
                 initial={{ 
                   opacity: 0,
-                  x: slideDirection > 0 ? '100%' : slideDirection < 0 ? '-100%' : 0
+                  x: slideDirection > 0 ? '100%' : slideDirection < 0 ? '-100%' : 0,
+                  scale: 0.95
                 }}
                 animate={{ 
                   opacity: 1,
                   x: 0,
-                  transition: { duration: 0.3, ease: "easeOut" }
+                  scale: 1,
+                  transition: { 
+                    duration: 0.4, 
+                    ease: [0.25, 0.8, 0.25, 1],
+                    scale: { duration: 0.3 }
+                  }
                 }}
                 exit={{ 
                   opacity: 0,
                   x: slideDirection > 0 ? '-100%' : slideDirection < 0 ? '100%' : 0,
-                  transition: { duration: 0.3, ease: "easeIn" }
+                  scale: 0.95,
+                  transition: { 
+                    duration: 0.3, 
+                    ease: [0.25, 0.8, 0.25, 1] 
+                  }
                 }}
                 className="image-slide active"
                 style={{ 
@@ -426,61 +333,97 @@ const ProfessionalGalleryModal = ({
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0
                 }}
               >
                 {isLoading && (
-                  <div className="image-loading">
+                  <motion.div 
+                    className="image-loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
                     <div className="loading-spinner"></div>
-                  </div>
+                    <p style={{ marginTop: '1rem', color: 'rgba(255,255,255,0.8)' }}>Loading image...</p>
+                  </motion.div>
                 )}
                 
                 {hasError ? (
-                  <div className="image-error">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+                  <motion.div 
+                    className="image-error"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                  >
+                    <svg className="image-error-icon" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                     </svg>
-                    <p>Image could not be loaded</p>
-                  </div>
+                    <p>Unable to load this image</p>
+                    <button 
+                      onClick={() => preloadImage(currentIndex)} 
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(255,255,255,0.2)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        borderRadius: '6px',
+                        color: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Try Again
+                    </button>
+                  </motion.div>
                 ) : (
-                  <>
-                    {console.log('Rendering image with URL:', currentImageUrl)}
-                    {console.log('Final image URL for rendering:', getImageUrl(currentImageUrl))}
-                    <img
-                      src={currentImageUrl} // Use the raw URL directly
-                      alt={`${productName} - Image ${currentIndex + 1}`}
-                      onLoad={handleImageLoad}
-                      onError={handleFallbackImage} // Use our fallback mechanism
-                      className="main-image"
-                      crossOrigin="anonymous" // Help with CORS issues
-                    />
-                  </>
+                  <OptimizedImage
+                    src={currentImageUrl}
+                    alt={`${productName} - Image ${currentIndex + 1}`}
+                    onLoad={handleImageLoad}
+                    onError={() => handleImageError(currentIndex)}
+                    className="main-image"
+                    size="large"
+                    category={productName}
+                    lazy={false}
+                    style={{ 
+                      maxHeight: '85vh',
+                      maxWidth: '95vw',
+                      objectFit: 'contain'
+                    }}
+                    priority={true}
+                  />
                 )}
               </motion.div>
             </AnimatePresence>
           </div>
           
-          {/* Navigation buttons */}
+          {/* Enhanced Navigation buttons with better styling */}
           {processedImages.length > 1 && (
             <>
               <button 
-                className="nav-arrow nav-arrow-left" 
+                className="nav-arrow prev" 
                 onClick={(e) => {
                   e.stopPropagation();
                   navigatePrevious();
                 }}
+                title="Previous image"
+                aria-label="Previous image"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                 </svg>
               </button>
               <button 
-                className="nav-arrow nav-arrow-right" 
+                className="nav-arrow next" 
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateNext();
                 }}
+                title="Next image"
+                aria-label="Next image"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                 </svg>
               </button>
@@ -488,9 +431,15 @@ const ProfessionalGalleryModal = ({
           )}
         </div>
         
-        {/* Thumbnails with horizontal scrolling */}
+        {/* Enhanced Thumbnails with animation */}
         {showThumbnails && processedImages.length > 1 && (
-          <div className="gallery-thumbnails">
+          <motion.div 
+            className="gallery-thumbnails"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
             <div 
               className="thumbnails-container"
               ref={thumbnailsContainerRef}
@@ -501,14 +450,13 @@ const ProfessionalGalleryModal = ({
                   className={`thumbnail-item ${index === currentIndex ? 'active' : ''}`}
                   onClick={() => handleThumbnailClick(index)}
                 >
-                  <img 
-                    src={getImageUrl(image)}
+                  <OptimizedImage
+                    src={image}
                     alt={`Thumbnail ${index + 1}`} 
                     className="thumbnail"
-                    onError={(e) => {
-                      e.target.onerror = null; 
-                      e.target.src = '/images/placeholder-thumbnail.png';
-                    }}
+                    size="thumbnail"
+                    category={productName}
+                    lazy={false}
                   />
                   {index === currentIndex && (
                     <div className="thumbnail-active-indicator"></div>
@@ -552,7 +500,7 @@ const ProfessionalGalleryModal = ({
                 </button>
               </>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

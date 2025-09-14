@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LightboxGallery from '../components/LightboxGallery';
 import ProfessionalGalleryModal from '../components/ProfessionalGalleryModal';
@@ -81,14 +81,91 @@ const GalleryPage = () => {
   // Testimonial state - manage testimonial slider
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
 
-  // Load categories and initial data from API
+  // Add periodic refresh and real-time admin panel synchronization
+  useEffect(() => {
+    // Set up periodic refresh to catch admin panel changes
+    const refreshInterval = setInterval(async () => {
+      console.log("🔄 Periodic gallery refresh to sync with admin panel...");
+      try {
+        // Check if there have been any updates by comparing timestamps
+        const lastRefresh = localStorage.getItem('galleryLastRefresh');
+        const now = Date.now();
+        const timeSinceLastRefresh = now - (lastRefresh ? parseInt(lastRefresh) : 0);
+        
+        // Refresh every 2 minutes or when explicitly requested
+        if (timeSinceLastRefresh > 120000) { // 2 minutes
+          console.log("⏰ Auto-refreshing gallery data for admin panel sync...");
+          
+          // Quick check for updates without full reload
+          const [productsCheck, categoriesCheck] = await Promise.allSettled([
+            api.get('/products?limit=1&sort=-updatedAt').catch(() => null),
+            api.get('/categories?limit=1&sort=-updatedAt').catch(() => null)
+          ]);
+          
+          let shouldRefresh = false;
+          
+          // Check if products have been updated recently
+          if (productsCheck.status === 'fulfilled' && productsCheck.value?.data?.products?.[0]) {
+            const latestProduct = productsCheck.value.data.products[0];
+            const productUpdateTime = new Date(latestProduct.updatedAt || latestProduct.createdAt).getTime();
+            if (productUpdateTime > (parseInt(lastRefresh) || 0)) {
+              console.log("🆕 Detected product updates, refreshing...");
+              shouldRefresh = true;
+            }
+          }
+          
+          // Check if categories have been updated recently
+          if (categoriesCheck.status === 'fulfilled' && categoriesCheck.value?.data?.[0]) {
+            const latestCategory = categoriesCheck.value.data[0];
+            const categoryUpdateTime = new Date(latestCategory.updatedAt || latestCategory.createdAt).getTime();
+            if (categoryUpdateTime > (parseInt(lastRefresh) || 0)) {
+              console.log("🆕 Detected category updates, refreshing...");
+              shouldRefresh = true;
+            }
+          }
+          
+          if (shouldRefresh) {
+            console.log("✅ Admin panel changes detected, refreshing gallery...");
+            // Trigger a full refresh
+            window.location.reload();
+          } else {
+            // Update last refresh time even if no changes
+            localStorage.setItem('galleryLastRefresh', now.toString());
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error during periodic refresh:", error);
+      }
+    }, 60000); // Check every minute
+
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Listen for storage events to sync across tabs when admin makes changes
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === 'adminPanelUpdate' && event.newValue) {
+        console.log("🔄 Admin panel update detected via storage event");
+        // Reload gallery data when admin panel signals an update
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Load categories and initial data from API with enhanced synchronization
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // 1. Load config, categories and products in parallel
+        console.log('🔄 Loading gallery data from API with admin panel sync...');
+        
+        // 1. Load config, categories, products, and check for updates in parallel
         const [configResponse, categoriesResponse, sectionsResponse, productsResponse] = await Promise.all([
           galleryAPI.getGalleryConfig().catch(() => ({ data: null })),
           api.get('/categories').catch(() => ({ data: [] })),
@@ -96,21 +173,42 @@ const GalleryPage = () => {
           galleryAPI.getAllProducts().catch(() => ({ data: [] }))
         ]);
 
+        console.log('📊 API responses received:', {
+          config: !!configResponse?.data,
+          categories: categoriesResponse?.data?.length || 0,
+          sections: sectionsResponse?.data?.sections?.length || 0,
+          products: productsResponse?.data?.length || 0
+        });
+
         // Update configuration if available
         if (configResponse && configResponse.data) {
           setConfig(prevConfig => ({...prevConfig, ...configResponse.data}));
         }
         
-        // 2. Process categories from database
+        // 2. Process categories from database with enhanced validation and null safety
         let dbCategories = categoriesResponse.data || [];
         
-        // Ensure we have valid data structure for each category
-        dbCategories = dbCategories.map(cat => ({
-          id: cat._id || `cat-${cat.name?.toLowerCase().replace(/\s+/g, '-')}`,
-          name: cat.name || 'Unnamed Category',
-          description: cat.description || '',
-          image: cat.image || null
-        }));
+        // Ensure we have valid data structure for each category with comprehensive null checks
+        dbCategories = dbCategories
+          .filter(cat => cat && (cat.name || cat.title)) // Filter out null/undefined categories
+          .map(cat => {
+            try {
+              return {
+                id: cat._id || `cat-${(cat.name || cat.title || 'unknown').toLowerCase().replace(/\s+/g, '-')}`,
+                name: cat.name || cat.title || 'Unnamed Category',
+                description: cat.description || '',
+                image: cat.image || null,
+                _id: cat._id || null, // Keep original ID for API calls
+                productCount: 0 // Will be calculated later
+              };
+            } catch (error) {
+              console.warn('Error processing category:', cat, error);
+              return null;
+            }
+          })
+          .filter(Boolean); // Remove any null results from error handling
+        
+        console.log('📁 Processed categories:', dbCategories.map(c => ({ id: c.id, name: c.name })));
         
         // 3. Add Custom Projects category if not already present
         if (!dbCategories.find(cat => cat.name === "Custom Projects")) {
@@ -118,11 +216,12 @@ const GalleryPage = () => {
             id: "custom-projects", 
             name: "Custom Projects",
             description: "Custom designed projects tailored to specific needs",
-            image: null
+            image: null,
+            productCount: 0
           });
         }
         
-        // 4. Process gallery sections
+        // 4. Process gallery sections with better error handling
         const gallerySections = sectionsResponse.data?.sections || [];
         
         // Format sections for display
@@ -136,11 +235,13 @@ const GalleryPage = () => {
           imageCount: (section.images || []).length
         }));
         
+        console.log('🖼️ Processed gallery sections:', formattedSections.length);
+        
         // 5. Set up categories based on both database categories and sections
         const sectionCategories = [...new Set(formattedSections.map(s => s.category))];
         const allCategories = [
-          { id: 'all', name: 'All', description: 'All gallery sections and products' },
-          { id: 'featured', name: 'Featured', description: 'Featured items' },
+          { id: 'all', name: 'All', description: 'All gallery sections and products', productCount: 0 },
+          { id: 'featured', name: 'Featured', description: 'Featured items', productCount: 0 },
           // Add database categories
           ...dbCategories,
           // Add section categories not already in database categories
@@ -149,35 +250,80 @@ const GalleryPage = () => {
             .map(cat => ({
               id: cat.toLowerCase().replace(/\s+/g, '-'),
               name: cat,
-              description: `${cat} sections`
+              description: `${cat} sections`,
+              productCount: 0
             }))
         ];
         
-        setCategories(allCategories);
+        console.log('📂 Final categories setup:', allCategories.map(c => ({ id: c.id, name: c.name })));
         
-        // 6. Process products
+        // 6. Process products with enhanced synchronization and null safety
         const initialProducts = productsResponse.data || [];
-        const formattedProducts = initialProducts.map(formatProduct).filter(Boolean);
+        console.log('🛍️ Raw products from API:', initialProducts.length);
         
-        // 7. Set up products organized by sections and categories
+        const formattedProducts = initialProducts
+          .map(product => {
+            try {
+              return formatProduct(product);
+            } catch (error) {
+              console.warn('Error formatting product:', product, error);
+              return null;
+            }
+          })
+          .filter(Boolean); // Remove null results
+        console.log('✅ Formatted products:', formattedProducts.length);
+        
+        // 7. Calculate product counts for each category
         const productsByCategory = {
           'all': [...formattedProducts, ...formattedSections],
           'featured': [...formattedProducts.filter(p => p && p.featured), ...formattedSections.filter(s => s.featured)]
         };
         
-        // Add products by category
+        // Add products by category with count tracking and enhanced null safety
         dbCategories.forEach(cat => {
-          if (!cat.id || !cat.name) return;
+          if (!cat || !cat.id || !cat.name) return;
           
-          // Find products that match this category
-          const categoryProducts = formattedProducts.filter(p => 
-            p && p.category && 
-            (p.category.toLowerCase() === cat.name.toLowerCase() || 
-             p.category.toLowerCase().includes(cat.name.toLowerCase()) ||
-             (p.data && p.data.categoryId === cat.id))
-          );
+          // Find products that match this category using multiple strategies
+          const categoryProducts = formattedProducts.filter(p => {
+            if (!p) return false;
+            
+            // Strategy 1: Direct category name match
+            if (p.category && cat.name && p.category.toLowerCase() === cat.name.toLowerCase()) {
+              return true;
+            }
+            
+            // Strategy 2: Category includes match
+            if (p.category && cat.name && (
+              p.category.toLowerCase().includes(cat.name.toLowerCase()) ||
+              cat.name.toLowerCase().includes(p.category.toLowerCase())
+            )) {
+              return true;
+            }
+            
+            // Strategy 3: Category ID match from data object with enhanced null safety
+            if (p.data && p.data.categoryId) {
+              // Direct ID comparison
+              if (p.data.categoryId === cat.id || p.data.categoryId === cat._id) {
+                return true;
+              }
+              
+              // Check if categoryId is an object with _id (with null safety)
+              if (typeof p.data.categoryId === 'object' && 
+                  p.data.categoryId !== null && 
+                  p.data.categoryId._id && 
+                  cat._id && 
+                  p.data.categoryId._id === cat._id) {
+                return true;
+              }
+            }
+            
+            return false;
+          });
           
           productsByCategory[cat.id] = categoryProducts;
+          cat.productCount = categoryProducts.length;
+          
+          console.log(`📦 Category "${cat.name}" has ${categoryProducts.length} products`);
         });
         
         // Add sections by category
@@ -200,48 +346,87 @@ const GalleryPage = () => {
         // Set active category to 'all' initially
         setActiveCategory('all');
         
+        // Store timestamp for periodic sync
+        localStorage.setItem('galleryLastRefresh', Date.now().toString());
+        
         setLoading(false);
+        console.log('✅ Gallery data loading completed with admin panel synchronization');
+        
       } catch (error) {
         console.error('Error loading gallery data:', error);
         setError(error.message || 'Failed to load gallery data');
         setLoading(false);
+        
+        // Set fallback data to prevent complete failure
+        setProducts({ all: [] });
+        setAllProducts([]);
+        setCategories([
+          { id: 'all', name: 'All', description: 'All gallery items', productCount: 0 }
+        ]);
+        setActiveCategory('all');
       }
     };
 
     loadInitialData();
   }, []);
 
-  // Format product data consistently with optimized images
+  // Format product data consistently with optimized images and enhanced null safety
   const formatProduct = (product) => {
     if (!product) return null;
     
-    // Handle different data structures that might come from the API
-    // Safely access nested properties with optional chaining
-    const categoryInfo = product.categoryId && typeof product.categoryId === 'object' 
-      ? product.categoryId.name
-      : (product.category || 'uncategorized');
-    
-    // Get the primary image source
-    const primaryImageSrc = product.mainImage || product.image || product.images?.[0] || product.src;
-    
-    // Get optimized image URL
-    const optimizedImageUrl = ImageService.getOptimizedImageUrl(primaryImageSrc, {
-      category: categoryInfo,
-      width: 600,
-      height: 600
-    });
+    try {
+      // Handle different data structures that might come from the API
+      // Safely access nested properties with comprehensive null checking
+      let categoryInfo = 'uncategorized';
       
-    return {
-      id: product._id || product.id,
-      title: product.name || product.title || 'Unnamed Product',
-      description: product.description || '',
-      category: categoryInfo,
-      src: optimizedImageUrl,
-      alt: ImageService.getImageAlt(product),
-      featured: product.featured || false,
-      tags: product.tags || [],
-      data: product // Keep the original data for reference
-    };
+      if (product.categoryId) {
+        if (typeof product.categoryId === 'object' && product.categoryId !== null) {
+          categoryInfo = product.categoryId.name || product.categoryId.title || 'uncategorized';
+        } else if (typeof product.categoryId === 'string') {
+          categoryInfo = product.categoryId;
+        }
+      } else if (product.category) {
+        categoryInfo = product.category;
+      }
+      
+      // Get the primary image source with multiple fallbacks
+      const primaryImageSrc = product.mainImage || 
+                             product.image || 
+                             (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null) || 
+                             product.src ||
+                             null;
+      
+      // Get optimized image URL with error handling
+      let optimizedImageUrl = null;
+      if (primaryImageSrc) {
+        try {
+          optimizedImageUrl = ImageService.getOptimizedImageUrl(primaryImageSrc, {
+            category: categoryInfo,
+            width: 600,
+            height: 600
+          });
+        } catch (imageError) {
+          console.warn('Error optimizing image URL:', imageError);
+          optimizedImageUrl = primaryImageSrc; // Use original URL as fallback
+        }
+      }
+      
+      return {
+        id: product._id || product.id || `product-${Date.now()}-${Math.random()}`,
+        title: product.name || product.title || 'Unnamed Product',
+        description: product.description || '',
+        category: categoryInfo,
+        src: optimizedImageUrl,
+        alt: product.alt || `${product.name || 'Product'} image`,
+        featured: Boolean(product.featured),
+        tags: Array.isArray(product.tags) ? product.tags : [],
+        data: product // Keep the original data for reference
+      };
+      
+    } catch (error) {
+      console.error('Error formatting product:', error, product);
+      return null;
+    }
   };
 
   // Get all products for statistics
@@ -412,133 +597,105 @@ const GalleryPage = () => {
       });
   };
 
-  // Handle product click to show detailed view
+  // Streamlined product click handler for gallery view - production ready
   const handleProductClick = async (product) => {
     try {
-      console.log("🎯 Product clicked for gallery view:", product);
+      console.log("🎯 Opening gallery for product:", product?.name || 'Unknown Product');
+      console.log("🔍 Full product data:", product);
       
       if (!product) {
-        console.error("❌ Invalid product data: product is null or undefined");
+        console.error("❌ No product data provided");
         return;
       }
       
-      // Extract product information
-      const productId = product.id || product._id || (product.data && product.data._id);
-      const productName = product.title || product.name || 'Product Gallery';
-      
-      console.log(`🔍 Loading gallery for "${productName}" (ID: ${productId})`);
-      
-      // Set loading state for better UX
       setLoading(true);
       setSelectedProduct(product);
       
-      // Start with main product image
-      let galleryImages = [];
-      if (product.src) {
-        // Ensure the image URL is properly formatted for Cloudinary
-        const processedImageUrl = CloudinaryImageService.isCloudinaryUrl(product.src) 
-          ? CloudinaryImageService.optimizeCloudinaryUrl(product.src, { quality: "auto:best", fetch_format: "auto" })
-          : product.src;
-        galleryImages.push(processedImageUrl);
-      }
+      const productId = product._id || product.id;
+      const productName = product.name || product.title || 'Product Gallery';
       
-      // Check for data.images if available
-      if (product.data && Array.isArray(product.data.images) && product.data.images.length > 0) {
-        console.log(`📸 Found ${product.data.images.length} images in product data object`);
-        
-        // Process all images from product data
-        product.data.images.forEach(img => {
-          if (!img) return;
-          
-          const processedUrl = CloudinaryImageService.isCloudinaryUrl(img) 
-            ? CloudinaryImageService.optimizeCloudinaryUrl(img, { quality: "auto:best", fetch_format: "auto" })
-            : img;
-            
-          // Don't add duplicates
-          if (!galleryImages.includes(processedUrl)) {
-            galleryImages.push(processedUrl);
-          }
-        });
-      }
-      
-      // If we have a product ID, fetch additional images
-      if (productId) {
+      // Collect all available images from the correct product structure
+      const imageCollectors = [
+        // Main image (this is the primary image field in Product model)
+        product.image,
+        // Images array (this is the additional images field in Product model)
+        ...(Array.isArray(product.images) ? product.images : [])
+      ];
+
+      console.log("📋 Available image fields in product:", {
+        image: product.image,
+        images: product.images,
+        imagesLength: Array.isArray(product.images) ? product.images.length : 0
+      });
+
+      // Process and clean up image URLs
+      let galleryImages = imageCollectors
+        .filter(Boolean) // Remove null/undefined
+        .map(img => {
+          // Handle different image formats
+          if (typeof img === 'string') return img.trim();
+          if (typeof img === 'object' && (img.url || img.src)) return img.url || img.src;
+          return null;
+        })
+        .filter(Boolean) // Remove failed conversions
+        .filter((url, index, arr) => arr.indexOf(url) === index); // Remove duplicates
+
+      console.log("🖼️ Processed gallery images:", galleryImages);
+
+      // If we have a product ID, try to fetch fresh data from the server
+      if (productId && galleryImages.length < 3) {
         try {
-          console.log(`📸 Fetching detailed images for product ${productId}`);
-          const productDetail = await galleryAPI.getProductDetail(productId);
+          console.log(`� Fetching fresh product data for ID: ${productId}`);
+          const response = await api.get(`/products/${productId}`);
           
-          if (productDetail && productDetail.isGalleryReady && productDetail.galleryData) {
-            console.log(`✅ Gallery ready with ${productDetail.totalImages} images`);
+          if (response.data) {
+            const freshProduct = response.data;
             
-            // Process all images to ensure they're properly formatted for Cloudinary
-            const processedImages = CloudinaryImageService.processGalleryImages(
-              productDetail.galleryData.map(img => img.url)
-            );
+            // Add fresh images
+            const freshImages = [
+              freshProduct.image,
+              ...(Array.isArray(freshProduct.images) ? freshProduct.images : [])
+            ].filter(Boolean);
             
-            setGalleryModalImages(processedImages);
-            setGalleryModalTitle(productName);
-            setGalleryModalInitialIndex(0);
-            setIsGalleryModalOpen(true);
-            
-          } else if (productDetail && productDetail.images && productDetail.images.length > 0) {
-            console.log(`📷 Found ${productDetail.images.length} images in product detail`);
-            
-            // Use the images array from product detail
-            setGalleryModalImages(productDetail.images);
-            setGalleryModalTitle(productName);
-            setGalleryModalInitialIndex(0);
-            setIsGalleryModalOpen(true);
-            
-          } else {
-            console.log(`⚠️ No additional images found, using main image only`);
-            
-            // Fallback to just the main image
-            if (galleryImages.length > 0) {
-              setGalleryModalImages(galleryImages);
-              setGalleryModalTitle(productName);
-              setGalleryModalInitialIndex(0);
-              setIsGalleryModalOpen(true);
-            } else {
-              console.error("❌ No images available for gallery");
-            }
+            freshImages.forEach(img => {
+              const imgUrl = typeof img === 'string' ? img : (img.url || img.src);
+              if (imgUrl && !galleryImages.includes(imgUrl)) {
+                galleryImages.push(imgUrl);
+              }
+            });
           }
-          
-        } catch (detailError) {
-          console.error("❌ Error fetching product details:", detailError);
-          
-          // Fallback to main image if API fails
-          if (galleryImages.length > 0) {
-            setGalleryModalImages(galleryImages);
-            setGalleryModalTitle(productName);
-            setGalleryModalInitialIndex(0);
-            setIsGalleryModalOpen(true);
-          }
-        }
-      } else {
-        console.log(`ℹ️ No product ID found, using main image only`);
-        
-        // No product ID, just show the main image
-        if (galleryImages.length > 0) {
-          setGalleryModalImages(galleryImages);
-          setGalleryModalTitle(productName);
-          setGalleryModalInitialIndex(0);
-          setIsGalleryModalOpen(true);
+        } catch (error) {
+          console.warn("⚠️ Could not fetch fresh product data:", error.message);
         }
       }
-      
-      setLoading(false);
-      
-    } catch (error) {
-      console.error("❌ Error in handleProductClick:", error);
-      setLoading(false);
-      
-      // Show error message to user or fallback behavior
-      if (product.src) {
-        setGalleryModalImages([product.src]);
-        setGalleryModalTitle(product.title || 'Product Gallery');
+
+      console.log(`📸 Collected ${galleryImages.length} images for gallery`);
+
+      // Open gallery modal if we have images
+      if (galleryImages.length > 0) {
+        setGalleryModalImages(galleryImages);
+        setGalleryModalTitle(productName);
         setGalleryModalInitialIndex(0);
         setIsGalleryModalOpen(true);
+        console.log(`✅ Gallery opened with ${galleryImages.length} images`);
+      } else {
+        console.warn("⚠️ No images found for product");
+        console.warn("🔍 Product structure:", {
+          name: product.name,
+          image: product.image,
+          images: product.images,
+          hasImage: !!product.image,
+          hasImages: Array.isArray(product.images) && product.images.length > 0
+        });
+        // Create a more helpful error message
+        alert(`No images are currently available for "${productName}". Please check if the product has images uploaded.`);
       }
+
+    } catch (error) {
+      console.error("❌ Error in handleProductClick:", error);
+      alert(`Unable to load gallery for "${product?.name || 'this product'}". Please try again.`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -681,6 +838,63 @@ const GalleryPage = () => {
       setInitialLoad(false);
     }
   }, [allProducts, initialLoad]);
+  
+  // Manual refresh function for admin panel sync
+  const refreshGalleryData = useCallback(async () => {
+    console.log("🔄 Manual gallery refresh initiated...");
+    setLoading(true);
+    
+    try {
+      // Clear cache and reload
+      localStorage.removeItem('galleryLastRefresh');
+      
+      // Reload the page to get fresh data
+      window.location.reload();
+    } catch (error) {
+      console.error("❌ Error during manual refresh:", error);
+      setLoading(false);
+    }
+  }, []);
+
+  // Auto-refresh detector for admin panel changes
+  const checkForUpdates = useCallback(async () => {
+    try {
+      const [productsResponse, categoriesResponse] = await Promise.allSettled([
+        api.get('/products?limit=1&sort=-updatedAt&select=updatedAt').catch(() => null),
+        api.get('/categories?limit=1&sort=-updatedAt&select=updatedAt').catch(() => null)
+      ]);
+      
+      const lastCheck = localStorage.getItem('galleryLastUpdateCheck');
+      const currentTime = Date.now();
+      
+      let hasUpdates = false;
+      
+      if (productsResponse.status === 'fulfilled' && productsResponse.value?.data?.products?.[0]) {
+        const latestProduct = productsResponse.value.data.products[0];
+        const updateTime = new Date(latestProduct.updatedAt).getTime();
+        if (!lastCheck || updateTime > parseInt(lastCheck)) {
+          hasUpdates = true;
+          console.log("🆕 Product updates detected");
+        }
+      }
+      
+      if (categoriesResponse.status === 'fulfilled' && categoriesResponse.value?.data?.[0]) {
+        const latestCategory = categoriesResponse.value.data[0];
+        const updateTime = new Date(latestCategory.updatedAt).getTime();
+        if (!lastCheck || updateTime > parseInt(lastCheck)) {
+          hasUpdates = true;
+          console.log("🆕 Category updates detected");
+        }
+      }
+      
+      localStorage.setItem('galleryLastUpdateCheck', currentTime.toString());
+      return hasUpdates;
+      
+    } catch (error) {
+      console.error("❌ Error checking for updates:", error);
+      return false;
+    }
+  }, []);
   
   if (loading && initialLoad) {
     return (
@@ -873,31 +1087,52 @@ const GalleryPage = () => {
               </div>
 
               {/* View Mode Toggle - Desktop Only */}
-              <div className="hidden md:flex items-center gap-1 bg-gray-100 rounded-lg p-1 shadow-inner">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded-md transition-all duration-200 ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 active:bg-white'
-                  }`}
-                  title="Grid View"
-                  aria-label="Switch to grid view"
+              <div className="hidden md:flex items-center gap-3">
+                {/* Refresh Button for Admin Panel Sync */}
+                <motion.button
+                  onClick={refreshGalleryData}
+                  disabled={loading}
+                  className={`p-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 
+                    ${loading 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 active:bg-blue-200'
+                    }`}
+                  title={loading ? "Refreshing..." : "Refresh gallery to sync with admin panel changes"}
+                  aria-label={loading ? "Refreshing gallery" : "Refresh gallery data"}
+                  whileHover={!loading ? { scale: 1.05 } : {}}
+                  whileTap={!loading ? { scale: 0.95 } : {}}
                 >
-                  <FaThLarge className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2.5 rounded-md transition-all duration-200 ${
-                    viewMode === 'list'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 active:bg-white'
-                  }`}
-                  title="List View"
-                  aria-label="Switch to list view"
-                >
-                  <FaList className="w-4 h-4" />
-                </button>
+                  <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="text-xs font-medium">Sync</span>
+                </motion.button>
+                
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shadow-inner">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2.5 rounded-md transition-all duration-200 ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-primary shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-50 active:bg-white'
+                    }`}
+                    title="Grid View"
+                    aria-label="Switch to grid view"
+                  >
+                    <FaThLarge className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2.5 rounded-md transition-all duration-200 ${
+                      viewMode === 'list'
+                        ? 'bg-white text-primary shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-50 active:bg-white'
+                    }`}
+                    title="List View"
+                    aria-label="Switch to list view"
+                  >
+                    <FaList className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
