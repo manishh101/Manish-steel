@@ -11,6 +11,7 @@ import { testimonials } from '../data/testimonials';
 import ScrollAnimator from '../components/ScrollAnimator';
 import OptimizedImage from '../components/common/OptimizedImage';
 import ApiDebugger from '../components/ApiDebugger';
+import { getContactInfo, getServices } from '../utils/storage';
 
 const HomePage = () => {
   // Use optimized category navigation hook
@@ -23,6 +24,35 @@ const HomePage = () => {
   // State for testimonial carousel
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
   const testimonialsPerPage = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+  
+  // Contact information state
+  const [contactInfo, setContactInfo] = useState({
+    address: 'Dharan Rd, Biratnagar 56613, Nepal',
+    phone: '+977 982-4336371',
+    email: 'shreemanishfurniture@gmail.com',
+    businessHours: 'Sunday - Friday: 8:00 AM - 7:00 PM\nSaturday: 8:00 AM - 12:00 PM',
+    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3572.089636105974!2d87.27763091503517!3d26.49980678332793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ef7395d46084a5%3A0xc709a12df1274cc8!2sShree%20Manish%20Steel%20Furniture%20Udhyog%20Pvt.%20Ltd.!5e0!3m2!1sen!2snp!4v1680000000000'
+  });
+  
+  // Services state
+  const [services, setServices] = useState([]);
+
+  // Load contact information and services from storage
+  useEffect(() => {
+    try {
+      const storedContactInfo = getContactInfo();
+      if (storedContactInfo) {
+        setContactInfo(storedContactInfo);
+      }
+      
+      const storedServices = getServices();
+      if (storedServices) {
+        setServices(storedServices);
+      }
+    } catch (error) {
+      console.error('Error loading contact info or services:', error);
+    }
+  }, []);
 
   // Preload common products when component mounts for instant browsing
   useEffect(() => {
@@ -572,6 +602,111 @@ const HomePage = () => {
             >
               Request Custom Order
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Services Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Comprehensive furniture solutions tailored to your needs
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service) => (
+              <div key={service.id} className="bg-gray-50 p-6 rounded-lg hover:shadow-lg transition-shadow">
+                <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-2xl text-primary">{service.icon}</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{service.title}</h3>
+                <p className="text-gray-600">
+                  {service.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Our Location Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Location</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Visit our showroom to see our furniture collection in person
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact Information */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h3>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                  <div>
+                    <span className="font-medium">Address: </span>
+                    <span className="text-gray-600">{contactInfo.address}</span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                  <div>
+                    <span className="font-medium">Phone: </span>
+                    <span className="text-gray-600">{contactInfo.phone}</span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                  <div>
+                    <span className="font-medium">Email: </span>
+                    <span className="text-gray-600">{contactInfo.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                  <div>
+                    <span className="font-medium">Business Hours: </span>
+                    <div className="text-gray-600">
+                      {contactInfo.businessHours && contactInfo.businessHours.split('\n').map((line, i) => (
+                        <div key={i}>{line}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Get Directions
+                </Link>
+              </div>
+            </div>
+            
+            {/* Map Container */}
+            <div className="lg:col-span-2 rounded-lg overflow-hidden shadow-lg h-[400px]">
+              <div className="relative w-full h-full">
+                <iframe 
+                  src={contactInfo.mapUrl}
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Shree Manish Steel Furniture Location"
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>

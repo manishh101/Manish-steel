@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const auth = require('../middleware/auth-secure').auth;
-const productController = require('../controllers/productController');
+const productController = require('../controllers/simpleProductController');
 
 /**
  * @route   GET api/products/filter
@@ -30,6 +30,20 @@ router.get('/featured', productController.getFeaturedProducts);
  * @access  Public
  */
 router.get('/best-selling', productController.getBestSellingProducts);
+
+/**
+ * @route   GET api/products/most-selling
+ * @desc    Get products marked as most selling (for homepage)
+ * @access  Public
+ */
+router.get('/most-selling', productController.getMostSellingProducts);
+
+/**
+ * @route   GET api/products/top-products
+ * @desc    Get products marked as top products (for homepage)
+ * @access  Public
+ */
+router.get('/top-products', productController.getTopProducts);
 
 /**
  * @route   GET api/products
@@ -63,8 +77,8 @@ router.post('/', [
   auth,
   [
     check('name', 'Name is required').not().isEmpty(),
-    check('price', 'Price is required').isNumeric(),
-    check('description', 'Description is required').not().isEmpty()
+    check('description', 'Description is required').not().isEmpty(),
+    check('image', 'Main image is required').not().isEmpty()
   ]
 ], productController.createProduct);
 
@@ -77,7 +91,6 @@ router.put('/:id', [
   auth,
   [
     check('name', 'Name is required').optional().not().isEmpty(),
-    check('price', 'Price must be a number').optional().isNumeric(),
     check('description', 'Description is required').optional().not().isEmpty()
   ]
 ], productController.updateProduct);
@@ -95,6 +108,20 @@ router.delete('/:id', auth, productController.deleteProduct);
  * @access  Private
  */
 router.patch('/:id/featured', auth, productController.updateFeaturedStatus);
+
+/**
+ * @route   PATCH api/products/:id/most-selling
+ * @desc    Update product most selling status
+ * @access  Private
+ */
+router.patch('/:id/most-selling', auth, productController.updateMostSellingStatus);
+
+/**
+ * @route   PATCH api/products/:id/top-product
+ * @desc    Update product top product status
+ * @access  Private
+ */
+router.patch('/:id/top-product', auth, productController.updateTopProductStatus);
 
 /**
  * @route   PATCH api/products/:id/sales

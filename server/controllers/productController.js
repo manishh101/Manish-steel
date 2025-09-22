@@ -42,33 +42,15 @@ exports.filterProducts = async (req, res) => {
     // Construct query based on provided filters
     let query = {};
     
-    // Category filter
+    // Category filter - simplified
     if (category && category !== 'all') {
       console.log('Filtering by category:', category);
       
-      // Try both ObjectId and string matching
-      const categoryQuery = { $or: [] };
-      
-      // Try ObjectId match
       if (mongoose.Types.ObjectId.isValid(category)) {
-        categoryQuery.$or.push({ categoryId: category });
-        
-        // Also try to find the category name and match against string field
-        try {
-          const categoryDoc = await Category.findById(category);
-          if (categoryDoc) {
-            console.log('Found category name for ID:', categoryDoc.name);
-            categoryQuery.$or.push({ category: new RegExp('^' + categoryDoc.name + '$', 'i') });
-          }
-        } catch (err) {
-          console.log('Error finding category by ID:', err.message);
-        }
+        query.categoryId = category;
+      } else {
+        query.category = { $regex: category, $options: 'i' };
       }
-      
-      // Also try string match
-      categoryQuery.$or.push({ category: new RegExp('^' + category + '$', 'i') });
-      
-      query = categoryQuery;
     }
     
     // Subcategory filter (apply in conjunction with category if specified)
@@ -144,7 +126,12 @@ exports.getAllProducts = async (req, res) => {
     const query = {};
     
     if (category) {
-      query.categoryId = category;
+      // Support both category name and categoryId
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        query.categoryId = category;
+      } else {
+        query.category = { $regex: category, $options: 'i' };
+      }
     }
     
     if (search) {
@@ -363,6 +350,78 @@ exports.getBestSellingProducts = async (req, res) => {
 };
 
 /**
+ * Get most selling products (for homepage display)
+ * @route GET /api/products/most-selling
+ */
+exports.getMostSellingProducts = async (req, res) => {
+  try {
+    const { limit = 6 } = req.query;
+    console.log('Most selling products API called with limit:', limit);
+    
+    const products = await Product.find({ 
+      isAvailable: true,
+      isMostSelling: true 
+    })
+      .populate('categoryId', 'name')
+      .populate('subcategoryId', 'name')
+      .sort({ salesCount: -1, rating: -1, dateAdded: -1 })
+      .limit(parseInt(limit));
+    
+    // Format products for response
+    const formattedProducts = products.map(formatProduct);
+    
+    res.json({
+      success: true,
+      count: formattedProducts.length,
+      products: formattedProducts
+    });
+  } catch (err) {
+    console.error('Most selling products error:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server Error',
+      error: err.message 
+    });
+  }
+};
+
+/**
+ * Get top products (for homepage display)
+ * @route GET /api/products/top-products
+ */
+exports.getTopProducts = async (req, res) => {
+  try {
+    const { limit = 6 } = req.query;
+    console.log('Top products API called with limit:', limit);
+    
+    const products = await Product.find({ 
+      isAvailable: true,
+      isTopProduct: true 
+    })
+      .populate('categoryId', 'name')
+      .populate('subcategoryId', 'name')
+      .sort({ rating: -1, salesCount: -1, dateAdded: -1 })
+      .limit(parseInt(limit));
+    
+    // Format products for response
+    const formattedProducts = products.map(formatProduct);
+    
+    res.json({
+      success: true,
+      count: formattedProducts.length,
+      products: formattedProducts
+    });
+  } catch (err) {
+    console.error('Top products error:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server Error',
+      error: err.message 
+    });
+  }
+};
+
+/**
  * Update product featured status
  * @route PATCH /api/products/:id/featured
  */
@@ -387,6 +446,78 @@ exports.updateFeaturedStatus = async (req, res) => {
     });
   } catch (err) {
     console.error('Update featured status error:', err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server Error',
+      error: err.message 
+    });
+  }
+};
+
+/**
+ * Update product most selling status
+ * @route PATCH /api/products/:id/most-selling
+ */
+exports.updateMostSellingStatus = async (req, res) => {
+  try {
+    const { isMostSelling } = req.body;
+    
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isMostSelling: Boolean(isMostSelling) },
+      { new: true }
+    ).populate('categoryId', 'name').populate('subcategoryId', 'name');
+    
+    if (!product) {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    
+    res.json({
+      success: true,
+      msg: `Product ${isMostSelling ? 'marked as most selling' : 'unmarked as most selling'} successfully`,
+      product: formatProduct(product)
+    });
+  } catch (err) {
+    console.error('Update most selling status error:', err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server Error',
+      error: err.message 
+    });
+  }
+};
+
+/**
+ * Update product top product status
+ * @route PATCH /api/products/:id/top-product
+ */
+exports.updateTopProductStatus = async (req, res) => {
+  try {
+    const { isTopProduct } = req.body;
+    
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isTopProduct: Boolean(isTopProduct) },
+      { new: true }
+    ).populate('categoryId', 'name').populate('subcategoryId', 'name');
+    
+    if (!product) {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    
+    res.json({
+      success: true,
+      msg: `Product ${isTopProduct ? 'marked as top product' : 'unmarked as top product'} successfully`,
+      product: formatProduct(product)
+    });
+  } catch (err) {
+    console.error('Update top product status error:', err.message);
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ msg: 'Product not found' });
     }

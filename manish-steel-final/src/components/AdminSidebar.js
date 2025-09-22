@@ -10,7 +10,8 @@ import {
   ArrowLeftOnRectangleIcon,
   XMarkIcon,
   EnvelopeIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
@@ -62,6 +63,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       path: '/admin/contact',
       name: 'Contact',
       icon: PhoneIcon
+    },
+    {
+      path: '/admin/services',
+      name: 'Services',
+      icon: WrenchScrewdriverIcon
     },
     {
       path: '/admin/settings',

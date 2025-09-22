@@ -152,13 +152,13 @@ const ProductCard = ({
             onLoad={handleImageLoad}
             onError={handleImageError}
             lazy={true}
-            priority={variant === 'featured'}
+            priority={variant === 'featured' ? 'true' : undefined}
           />
         </Link>
         
-        {/* Variant badges - positioned in top-left corner */}
+        {/* Variant badges - positioned in top-right corner */}
         {variant === 'featured' && (
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-3 right-3 z-10">
             <span className="inline-flex items-center gap-1 bg-yellow-100/95 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm">
               ⭐ Featured Product
             </span>
@@ -166,7 +166,7 @@ const ProductCard = ({
         )}
         
         {variant === 'bestseller' && (
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-3 right-3 z-10">
             <span className="inline-flex items-center gap-1 bg-orange-100/95 text-orange-800 px-2 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm">
               🔥 Best Seller
             </span>
@@ -175,7 +175,7 @@ const ProductCard = ({
         
         {/* Additional bestseller sales count badge */}
         {variant === 'bestseller' && salesCount && (
-          <div className="absolute top-12 left-3 z-10">
+          <div className="absolute top-12 right-3 z-10">
             <span className="inline-flex items-center gap-1 bg-green-100/95 text-green-800 px-2 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm">
               {salesCount}+ sold
             </span>
@@ -189,6 +189,7 @@ const ProductCard = ({
               <button
                 onClick={(e) => {
                   e.preventDefault();
+                  console.log('Quick view clicked for:', safeProduct.name);
                   onQuickView(safeProduct);
                 }}
                 className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-50 shadow-lg font-medium transition-colors w-full"
@@ -260,6 +261,32 @@ const ProductCard = ({
 
           {/* Standard variant button */}
           {variant === 'standard' && (
+            <button 
+              onClick={handleProductClick}
+              className={config.buttonClass}
+            >
+              {config.buttonText}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+
+          {/* Featured variant button */}
+          {variant === 'featured' && (
+            <button 
+              onClick={handleProductClick}
+              className={config.buttonClass}
+            >
+              {config.buttonText}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+
+          {/* Bestseller variant button */}
+          {variant === 'bestseller' && (
             <button 
               onClick={handleProductClick}
               className={config.buttonClass}

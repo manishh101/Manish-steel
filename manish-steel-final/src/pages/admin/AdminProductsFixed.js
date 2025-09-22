@@ -11,7 +11,7 @@ import OptimizedImage from '../../components/common/OptimizedImage';
 import ImageService from '../../services/imageService';
 import ProductFormEnhanced from '../../components/admin/ProductFormEnhanced';
 
-const AdminProducts = () => {
+const AdminProductsFixed = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,10 +24,6 @@ const AdminProducts = () => {
       const response = await productAPI.getAll(1, 1000);
       const products = Array.isArray(response.data) ? response.data : 
                       response.data?.products ? response.data.products : [];
-      
-      console.log('Loaded products for admin:', products.length, 'products');
-      console.log('Sample product data:', products[0]); // Debug first product structure
-      
       setProducts(products);
       setLoading(false);
     } catch (err) {
@@ -51,12 +47,6 @@ const AdminProducts = () => {
 
   const openEditModal = (product) => {
     console.log('Opening edit modal for product:', product);
-    console.log('Product category info:', {
-      categoryId: product.categoryId,
-      category: product.category,
-      subcategoryId: product.subcategoryId,
-      subcategory: product.subcategory
-    });
     setEditingProduct(product);
     setError('');
     setIsModalOpen(true);
@@ -79,7 +69,6 @@ const AdminProducts = () => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await productAPI.delete(productId);
-        console.log(`Successfully deleted product with ID: ${productId}`);
         await loadProducts();
       } catch (err) {
         console.error('Error deleting product:', err);
@@ -92,7 +81,6 @@ const AdminProducts = () => {
     try {
       const newFeaturedStatus = !currentFeaturedStatus;
       await productAPI.updateFeaturedStatus(productId, newFeaturedStatus);
-      console.log(`Updated featured status for product ${productId} to ${newFeaturedStatus}`);
       
       setProducts(prev => prev.map(product => 
         product._id === productId 
@@ -102,40 +90,6 @@ const AdminProducts = () => {
     } catch (err) {
       console.error('Error updating featured status:', err);
       setError(`Failed to update featured status: ${err.message}`);
-    }
-  };
-
-  const handleMostSellingToggle = async (productId, currentStatus) => {
-    try {
-      const newStatus = !currentStatus;
-      await productAPI.updateMostSellingStatus(productId, newStatus);
-      console.log(`Updated most selling status for product ${productId} to ${newStatus}`);
-      
-      setProducts(prev => prev.map(product => 
-        product._id === productId 
-          ? { ...product, isMostSelling: newStatus }
-          : product
-      ));
-    } catch (err) {
-      console.error('Error updating most selling status:', err);
-      setError(`Failed to update most selling status: ${err.message}`);
-    }
-  };
-
-  const handleTopProductToggle = async (productId, currentStatus) => {
-    try {
-      const newStatus = !currentStatus;
-      await productAPI.updateTopProductStatus(productId, newStatus);
-      console.log(`Updated top product status for product ${productId} to ${newStatus}`);
-      
-      setProducts(prev => prev.map(product => 
-        product._id === productId 
-          ? { ...product, isTopProduct: newStatus }
-          : product
-      ));
-    } catch (err) {
-      console.error('Error updating top product status:', err);
-      setError(`Failed to update top product status: ${err.message}`);
     }
   };
 
@@ -150,7 +104,7 @@ const AdminProducts = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-primary">Manage Products</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-primary">Manage Products (Fixed)</h1>
         <button 
           onClick={openAddModal}
           className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center w-full sm:w-auto"
@@ -261,28 +215,9 @@ const AdminProducts = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex flex-col space-y-1">
-                        <button
-                          onClick={() => handleMostSellingToggle(product._id, product.isMostSelling)}
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                            product.isMostSelling
-                              ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title={product.isMostSelling ? 'Remove from Most Selling' : 'Add to Most Selling'}
-                        >
-                          {product.isMostSelling ? '✓ Most Selling' : 'Most Selling'}
-                        </button>
-                        <button
-                          onClick={() => handleTopProductToggle(product._id, product.isTopProduct)}
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                            product.isTopProduct
-                              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title={product.isTopProduct ? 'Remove from Top Products' : 'Add to Top Products'}
-                        >
-                          {product.isTopProduct ? '✓ Top Product' : 'Top Product'}
-                        </button>
+                        {product.isMostSelling && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Most Selling</span>}
+                        {product.isTopProduct && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Top Product</span>}
+                        {!product.isMostSelling && !product.isTopProduct && <span className="text-gray-400">None</span>}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -335,4 +270,4 @@ const AdminProducts = () => {
   );
 };
 
-export default AdminProducts;
+export default AdminProductsFixed;

@@ -317,6 +317,71 @@ const deleteGalleryImage = (imageId) => {
   }
 };
 
+// Default services data
+const initialServices = [
+  {
+    id: 'service1',
+    title: 'Custom Design',
+    description: 'Personalized furniture designs crafted to match your space and style preferences perfectly.',
+    icon: '🏠'
+  },
+  {
+    id: 'service2',
+    title: 'Installation',
+    description: 'Professional installation services ensuring your furniture is set up correctly and safely.',
+    icon: '🔧'
+  },
+  {
+    id: 'service3',
+    title: 'Delivery',
+    description: 'Fast and secure delivery across Nepal with careful handling of your furniture pieces.',
+    icon: '🚚'
+  },
+  {
+    id: 'service4',
+    title: 'Maintenance',
+    description: 'Regular maintenance and repair services to keep your steel furniture in perfect condition.',
+    icon: '🛠️'
+  },
+  {
+    id: 'service5',
+    title: 'Office Solutions',
+    description: 'Complete office furniture packages designed for productivity and professional aesthetics.',
+    icon: '💼'
+  },
+  {
+    id: 'service6',
+    title: 'Manufacturing',
+    description: 'In-house manufacturing with quality control ensuring durable and long-lasting furniture.',
+    icon: '🏭'
+  }
+];
+
+// Services functions
+const getServices = () => {
+  try {
+    const saved = localStorage.getItem('manishSteel_services');
+    if (!saved) {
+      localStorage.setItem('manishSteel_services', JSON.stringify(initialServices));
+      return initialServices;
+    }
+    return JSON.parse(saved);
+  } catch (error) {
+    console.error('Error getting services:', error);
+    return initialServices;
+  }
+};
+
+const saveServices = (services) => {
+  try {
+    localStorage.setItem('manishSteel_services', JSON.stringify(services));
+    return true;
+  } catch (error) {
+    console.error('Error saving services:', error);
+    return false;
+  }
+};
+
 // Contact info functions
 const getContactInfo = () => {
   try {
@@ -357,5 +422,7 @@ export {
   saveGalleryImage,
   deleteGalleryImage,
   getContactInfo,
-  saveContactInfo
+  saveContactInfo,
+  getServices,
+  saveServices
 };

@@ -834,24 +834,39 @@ const ProductDetailPage = () => {
                 </span>
               </summary>
               <div className="p-4 pt-0 text-gray-600">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm text-gray-500">Material</span>
-                    <span className="font-medium">{product.material || "Steel"}</span>
+                {product.specifications && product.specifications.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {product.specifications.map((spec, index) => (
+                      <div key={index} className="flex flex-col space-y-1">
+                        <span className="text-sm text-gray-500">{spec.label}</span>
+                        <span className="font-medium">{spec.value}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm text-gray-500">Dimensions</span>
-                    <span className="font-medium">{product.dimensions || "Contact for details"}</span>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm text-gray-500">Material</span>
+                      <span className="font-medium">{product.material || "Steel"}</span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm text-gray-500">Dimensions</span>
+                      <span className="font-medium">
+                        {product.dimensions && (product.dimensions.length || product.dimensions.width || product.dimensions.height) 
+                          ? `${product.dimensions.length || 'N/A'} × ${product.dimensions.width || 'N/A'} × ${product.dimensions.height || 'N/A'} cm`
+                          : "Contact for details"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm text-gray-500">Finish</span>
+                      <span className="font-medium">{product.finish || "Premium"}</span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm text-gray-500">Weight</span>
+                      <span className="font-medium">{product.weight || "Varies by model"}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm text-gray-500">Finish</span>
-                    <span className="font-medium">{product.finish || "Premium"}</span>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm text-gray-500">Weight</span>
-                    <span className="font-medium">{product.weight || "Varies by model"}</span>
-                  </div>
-                </div>
+                )}
               </div>
             </details>
             
@@ -866,21 +881,64 @@ const ProductDetailPage = () => {
                 </span>
               </summary>
               <div className="p-4 pt-0 text-gray-600">
-                <p className="mb-3">Delivery options and timeframes may vary based on your location and product availability.</p>
-                <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">✓</span>
-                    <span>Free delivery within Kathmandu Valley</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">✓</span>
-                    <span>Installation services available</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">✓</span>
-                    <span>Contact us for shipping to other locations</span>
-                  </li>
-                </ul>
+                {product.deliveryInformation ? (
+                  <div className="space-y-3">
+                    {product.deliveryInformation.estimatedDelivery && (
+                      <div className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <div>
+                          <span className="font-medium">Estimated Delivery: </span>
+                          <span>{product.deliveryInformation.estimatedDelivery}</span>
+                        </div>
+                      </div>
+                    )}
+                    {product.deliveryInformation.shippingCost && (
+                      <div className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <div>
+                          <span className="font-medium">Shipping Cost: </span>
+                          <span>{product.deliveryInformation.shippingCost}</span>
+                        </div>
+                      </div>
+                    )}
+                    {product.deliveryInformation.availableLocations && product.deliveryInformation.availableLocations.length > 0 && (
+                      <div className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <div>
+                          <span className="font-medium">Available Locations: </span>
+                          <span>{product.deliveryInformation.availableLocations.join(', ')}</span>
+                        </div>
+                      </div>
+                    )}
+                    {product.deliveryInformation.specialInstructions && (
+                      <div className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <div>
+                          <span className="font-medium">Special Instructions: </span>
+                          <span>{product.deliveryInformation.specialInstructions}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-3">Delivery options and timeframes may vary based on your location and product availability.</p>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <span>Free delivery within Kathmandu Valley</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <span>Installation services available</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-5 h-5 bg-primary bg-opacity-10 rounded-full flex items-center justify-center text-primary mr-3 mt-0.5">•</span>
+                        <span>Contact us for shipping to other locations</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </details>
           </div>

@@ -6,10 +6,7 @@ const ProductSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  price: {
-    type: Number,
-    required: true
-  },
+  // Note: Price removed as per user request - no pricing in admin panel
   description: {
     type: String,
     required: true
@@ -29,16 +26,58 @@ const ProductSchema = new mongoose.Schema({
   subcategory: {
     type: String
   },
+  
+  // Enhanced product details
   features: [{
     type: String
   }],
+  specifications: [{
+    label: {
+      type: String,
+      required: true
+    },
+    value: {
+      type: String,
+      required: true
+    }
+  }],
+  deliveryInformation: {
+    estimatedDelivery: {
+      type: String,
+      default: "7-10 business days"
+    },
+    shippingCost: {
+      type: String,
+      default: "Free shipping"
+    },
+    availableLocations: [{
+      type: String
+    }],
+    specialInstructions: {
+      type: String
+    }
+  },
+  
+  // Image fields
   image: {
     type: String,
-    required: true
+    required: true,
+    alias: 'mainImage'
   },
   images: [{
     type: String
-  }],
+  }], // This will store the 3 sub images
+  
+  // Product categorization for homepage
+  isMostSelling: {
+    type: Boolean,
+    default: false
+  },
+  isTopProduct: {
+    type: Boolean,
+    default: false
+  },
+  
   dimensions: {
     length: Number,
     width: Number,
@@ -75,9 +114,6 @@ const ProductSchema = new mongoose.Schema({
   stock: {
     type: Number,
     default: 100
-  },
-  originalPrice: {
-    type: Number
   }
 });
 
@@ -86,11 +122,12 @@ ProductSchema.index({ categoryId: 1 }); // For filtering by category
 ProductSchema.index({ subcategoryId: 1 }); // For filtering by subcategory
 ProductSchema.index({ name: 'text', description: 'text' }); // Text search index
 ProductSchema.index({ dateAdded: -1 }); // For sorting by date
-ProductSchema.index({ price: 1 }); // For sorting and filtering by price
 ProductSchema.index({ isAvailable: 1 }); // For filtering by availability
 ProductSchema.index({ featured: 1 }); // For filtering featured products
 ProductSchema.index({ salesCount: -1 }); // For sorting by sales count
 ProductSchema.index({ rating: -1 }); // For sorting by rating
+ProductSchema.index({ isMostSelling: 1 }); // For filtering most selling products
+ProductSchema.index({ isTopProduct: 1 }); // For filtering top products
 
 // Pre-save hook to ensure category and subcategory string fields are populated
 ProductSchema.pre('save', async function(next) {

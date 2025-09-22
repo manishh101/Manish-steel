@@ -25,6 +25,7 @@ import AdminContact from './pages/admin/AdminContact';
 import AdminInquiries from './pages/admin/AdminInquiries';
 import AdminAbout from './pages/admin/AdminAbout';
 import AdminCustomOrders from './pages/admin/AdminCustomOrders';
+import ServicesManager from './components/admin/ServicesManager';
 import MobileDiagnostics from './components/MobileDiagnostics';
 import diagnosticsEnabler from './utils/diagnosticsEnabler';
 
@@ -77,6 +78,7 @@ function App() {
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="about" element={<AdminAbout />} />
                 <Route path="contact" element={<AdminContact />} />
+                <Route path="services" element={<ServicesManager />} />
                 <Route path="inquiries" element={<AdminInquiries />} />
                 <Route path="custom-orders" element={<AdminCustomOrders />} />
               </Route>

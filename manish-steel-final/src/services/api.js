@@ -303,6 +303,54 @@ export const productAPI = {
       // Simulate successful response for demo
       return { data: { success: true, msg: 'Sales count updated (demo mode)' } };
     }
+  },
+
+  // Get most selling products (for homepage)
+  getMostSelling: async (limit = 6) => {
+    try {
+      return await api.get('/products/most-selling', { params: { limit } });
+    } catch (error) {
+      console.warn('Error fetching most selling products:', error.message);
+      throw error; // Let the component handle the error
+    }
+  },
+
+  // Get top products (for homepage)
+  getTopProducts: async (limit = 6) => {
+    try {
+      return await api.get('/products/top-products', { params: { limit } });
+    } catch (error) {
+      console.warn('Error fetching top products:', error.message);
+      throw error; // Let the component handle the error
+    }
+  },
+
+  // Update most selling status
+  updateMostSellingStatus: async (id, isMostSelling) => {
+    try {
+      if (!isApiConnected) {
+        throw new Error('API not connected');
+      }
+      return await api.patch(`/products/${id}/most-selling`, { isMostSelling });
+    } catch (error) {
+      console.warn('Most selling status update fallback:', error.message);
+      // Simulate successful response for demo
+      return { data: { success: true, msg: 'Most selling status updated (demo mode)' } };
+    }
+  },
+
+  // Update top product status
+  updateTopProductStatus: async (id, isTopProduct) => {
+    try {
+      if (!isApiConnected) {
+        throw new Error('API not connected');
+      }
+      return await api.patch(`/products/${id}/top-product`, { isTopProduct });
+    } catch (error) {
+      console.warn('Top product status update fallback:', error.message);
+      // Simulate successful response for demo
+      return { data: { success: true, msg: 'Top product status updated (demo mode)' } };
+    }
   }
 };
 

@@ -20,7 +20,12 @@ exports.getAllProducts = async (req, res) => {
     const query = {};
     
     if (category) {
-      query.categoryId = category;
+      // Support both category name and categoryId
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        query.categoryId = category;
+      } else {
+        query.category = { $regex: category, $options: 'i' };
+      }
     }
     
     if (search) {

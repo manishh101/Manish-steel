@@ -39,7 +39,12 @@ const QuickView = ({ product, isOpen, onClose, variant = 'standard' }) => {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen || !product) return null;
+  if (!isOpen || !product) {
+    console.log('QuickView not rendering:', { isOpen, hasProduct: !!product });
+    return null;
+  }
+
+  console.log('QuickView rendering for product:', product.name);
 
   // Get variant-specific styling and content
   const getVariantConfig = () => {
@@ -193,6 +198,53 @@ const QuickView = ({ product, isOpen, onClose, variant = 'standard' }) => {
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
                         {product.salesCount}+ sold
                       </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Specifications */}
+                {product.specifications && product.specifications.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Specifications</h4>
+                    <div className="grid grid-cols-1 gap-2">
+                      {product.specifications.slice(0, 3).map((spec, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-gray-600">{spec.label}:</span>
+                          <span className="font-medium text-gray-900">{spec.value}</span>
+                        </div>
+                      ))}
+                      {product.specifications.length > 3 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          +{product.specifications.length - 3} more specifications
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Delivery Information */}
+                {product.deliveryInformation && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Delivery Info</h4>
+                    <div className="space-y-1 text-sm">
+                      {product.deliveryInformation.estimatedDelivery && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Delivery:</span>
+                          <span className="font-medium text-gray-900">{product.deliveryInformation.estimatedDelivery}</span>
+                        </div>
+                      )}
+                      {product.deliveryInformation.shippingCost && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Shipping:</span>
+                          <span className="font-medium text-gray-900">{product.deliveryInformation.shippingCost}</span>
+                        </div>
+                      )}
+                      {product.deliveryInformation.availableLocations && product.deliveryInformation.availableLocations.length > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Locations:</span>
+                          <span className="font-medium text-gray-900">{product.deliveryInformation.availableLocations.join(', ')}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
