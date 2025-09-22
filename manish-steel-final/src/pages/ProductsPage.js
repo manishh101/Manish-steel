@@ -409,7 +409,7 @@ const ProductsPage = () => {
 
             {/* Enhanced Loading State with skeleton animations */}
             {loading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fadeIn">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
                 {[...Array(8)].map((_, index) => (
                   <div 
                     key={index} 
@@ -481,7 +481,7 @@ const ProductsPage = () => {
                 ) : (
                   <>
                     {/* Enhanced Products Grid with staggered animations */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
                       {currentProducts.map((product, index) => (
                         <div 
                           key={product._id || product.id}

@@ -134,13 +134,17 @@ class CacheService {
       if (category === 'all') {
         // Get all products
         response = await productAPI.getAll(1, 1000);
-      } else {
-        // Get products by category
+      } else if (subcategory) {
+        // Get products by specific subcategory using filter endpoint
         response = await productAPI.getByCategoryAlternative(category, { 
           subcategory,
           limit: 1000,
           timestamp: Date.now()
         });
+      } else {
+        // ENHANCED: Get all products from main category INCLUDING all subcategories
+        console.log('CacheService: Getting all products for main category (including subcategories):', category);
+        response = await productAPI.getProductsByCategory(category, { limit: 1000 });
       }
       
       if (response?.data) {

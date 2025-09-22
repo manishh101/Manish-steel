@@ -159,38 +159,229 @@ export const productAPI = {
   
   // Enhanced filter endpoint for better category filtering
   getByCategory: async (categoryId, extraParams = {}) => {
-    console.log('API: Getting products by category via enhanced filter:', { categoryId, extraParams });
+    console.log('API: Getting products by category with subcategories via /products/filter endpoint:', { categoryId, extraParams });
     
     try {
       if (!isApiConnected) {
         throw new Error('API not connected');
       }
-      // Use the regular products endpoint with a category parameter
-      return await api.get('/products', { 
-        params: { 
-          category: categoryId,
-          subcategory: extraParams.subcategory,
-          limit: 100
-        } 
+
+      // ALWAYS include subcategories when fetching by category
+      // This is the key: we ALWAYS want all products from a category and its subcategories
+      const params = { 
+        category: categoryId,
+        includeAllSubcategories: true, // THIS IS THE FIX - always include subcategory products
+        limit: extraParams.limit || 100,
+        page: extraParams.page || 1
+      };
+
+      // Only add specific subcategory filter if explicitly requested (rare case)
+      if (extraParams.subcategory && extraParams.includeAllSubcategories === false) {
+        params.subcategory = extraParams.subcategory;
+        params.includeAllSubcategories = false; // Override to get only specific subcategory
+      }
+
+      console.log('API: Calling /products/filter with params:', params);
+      
+      const response = await api.get('/products/filter', { params });
+      
+      // Enhanced logging to verify category + subcategory filtering
+      const products = response.data?.products || response.data || [];
+      console.log('API: Category + subcategories filter response:', {
+        category: categoryId,
+        totalProducts: Array.isArray(products) ? products.length : 0,
+        includeSubcategories: params.includeAllSubcategories,
+        sampleProducts: Array.isArray(products) ? products.slice(0, 3).map(p => ({
+          name: p.name,
+          category: p.category,
+          subcategory: p.subcategory
+        })) : []
       });
+      
+      return response;
     } catch (error) {
-      console.warn('Using fallback product data for category:', categoryId, error.message);
-      // Filter the default products by category and subcategory
+      console.warn('Category + subcategories API failed, using fallback:', categoryId, error.message);
+      
+      // FIXED: Enhanced fallback for existing 41 products with ID-based categories
       let filtered = defaultProducts;
       
       if (categoryId && categoryId !== 'all') {
-        filtered = filtered.filter(p => p.categoryId === categoryId || p.category === categoryId);
+        // Create mapping between category names and IDs used in existing products
+        const categoryNameToIdMapping = {
+          'Office Furniture': 'office',
+          'Household Furniture': 'household', 
+          'Commercial Furniture': 'commercial'
+        };
+        
+        // Also create reverse mapping for flexibility
+        const categoryIdToNameMapping = {
+          'office': 'Office Furniture',
+          'household': 'Household Furniture',
+          'commercial': 'Commercial Furniture'
+        };
+        
+        // Determine the target category ID for filtering
+        let targetCategoryId = categoryId;
+        if (categoryNameToIdMapping[categoryId]) {
+          targetCategoryId = categoryNameToIdMapping[categoryId];
+        }
+        
+        filtered = filtered.filter(p => {
+          const productCategory = p.categoryId || p.category;
+          const productSubcategory = p.subcategoryId || p.subcategory;
+          
+          // FIXED: Direct category ID match for existing products
+          if (productCategory === targetCategoryId) return true;
+          if (productCategory === categoryId) return true;
+          
+          // Handle case-insensitive string matches
+          if (typeof productCategory === 'string') {
+            if (productCategory.toLowerCase() === targetCategoryId.toLowerCase()) return true;
+            if (productCategory.toLowerCase() === categoryId.toLowerCase()) return true;
+          }
+          
+          // FIXED: Enhanced subcategory mapping based on actual existing product subcategory IDs
+          const categorySubcategoryIdMapping = {
+            'office': [
+              'desks', 'chairs-office', 'tables-office', 'storage-office', 'filing-cabinets',
+              'workstations', 'conference-tables', 'reception-desks', 'cabinets-office', 'shelving-office'
+            ],
+            'household': [
+              'almirahs', 'beds', 'living-room', 'kitchen', 'dining-room', 'wardrobes',
+              'sofas', 'dining-tables', 'tv-units', 'bookshelves', 'storage-household'
+            ],
+            'commercial': [
+              'restaurant', 'hotel', 'retail', 'hospitality', 'cafe', 'reception',
+              'display-units', 'counters', 'seating-commercial', 'storage-commercial'
+            ]
+          };
+          
+          // Include all products from subcategories belonging to this category
+          if (productSubcategory && categorySubcategoryIdMapping[targetCategoryId]) {
+            const validSubcategoryIds = categorySubcategoryIdMapping[targetCategoryId];
+            return validSubcategoryIds.some(validId => 
+              productSubcategory === validId ||
+              productSubcategory.toLowerCase() === validId.toLowerCase() ||
+              productSubcategory.toLowerCase().includes(validId.toLowerCase()) ||
+              validId.toLowerCase().includes(productSubcategory.toLowerCase())
+            );
+          }
+          
+          return false;
+        });
       }
       
-      if (extraParams.subcategory) {
-        filtered = filtered.filter(p => p.subcategoryId === extraParams.subcategory || p.subcategory === extraParams.subcategory);
+      // Only filter by specific subcategory if explicitly requested and includeAllSubcategories is false
+      if (extraParams.subcategory && extraParams.includeAllSubcategories === false) {
+        filtered = filtered.filter(p => 
+          (p.subcategoryId === extraParams.subcategory || p.subcategory === extraParams.subcategory)
+        );
       }
       
+      console.log(`API: Fallback filtered ${filtered.length} products for category: ${categoryId}`);
       return { data: filtered };
     }
   },
-  
-  // Alternative category filter endpoint for specialized filtering
+
+  // NEW: Dedicated method for fetching products by category INCLUDING all subcategories
+  // This is what should be used when clicking on categories in the frontend
+  getProductsByCategory: async (categoryName, options = {}) => {
+    console.log('API: Getting ALL products for category and its subcategories:', categoryName);
+    
+    try {
+      if (!isApiConnected) {
+        throw new Error('API not connected');
+      }
+
+      const params = { 
+        category: categoryName,
+        includeAllSubcategories: true, // ALWAYS include subcategory products
+        limit: options.limit || 100,
+        page: options.page || 1
+      };
+
+      console.log('API: Fetching category products with params:', params);
+      
+      const response = await api.get('/products/filter', { params });
+      
+      const products = response.data?.products || response.data || [];
+      console.log(`API: Successfully fetched ${products.length} products for category "${categoryName}" including subcategories`);
+      
+      return response;
+    } catch (error) {
+      console.warn('Category products API failed, using fallback:', categoryName, error.message);
+      
+      // FIXED: Enhanced fallback for existing products with ID-based system  
+      let filtered = defaultProducts;
+      
+      if (categoryName && categoryName !== 'all') {
+        // Create mapping between category names and IDs used in existing products
+        const categoryNameToIdMapping = {
+          'Office Furniture': 'office',
+          'Household Furniture': 'household', 
+          'Commercial Furniture': 'commercial'
+        };
+        
+        // Determine the target category ID for filtering
+        let targetCategoryId = categoryName;
+        if (categoryNameToIdMapping[categoryName]) {
+          targetCategoryId = categoryNameToIdMapping[categoryName];
+        }
+        
+        filtered = filtered.filter(p => {
+          const productCategory = p.categoryId || p.category;
+          const productSubcategory = p.subcategoryId || p.subcategory;
+          
+          // Direct category match (handle both ID and name based filtering)
+          if (productCategory === targetCategoryId || productCategory === categoryName) {
+            return true;
+          }
+          
+          // Handle case-insensitive string matches
+          if (typeof productCategory === 'string') {
+            if (productCategory.toLowerCase() === targetCategoryId.toLowerCase() ||
+                productCategory.toLowerCase() === categoryName.toLowerCase()) {
+              return true;
+            }
+          }
+          
+          // FIXED: Comprehensive subcategory mapping using actual product subcategory IDs
+          const categorySubcategoryIdMapping = {
+            'office': [
+              'desks', 'chairs-office', 'tables-office', 'storage-office', 'filing-cabinets',
+              'workstations', 'conference-tables', 'reception-desks', 'cabinets-office', 'shelving-office'
+            ],
+            'household': [
+              'almirahs', 'beds', 'living-room', 'kitchen', 'dining-room', 'wardrobes',
+              'sofas', 'dining-tables', 'tv-units', 'bookshelves', 'storage-household'
+            ],
+            'commercial': [
+              'restaurant', 'hotel', 'retail', 'hospitality', 'cafe', 'reception',
+              'display-units', 'counters', 'seating-commercial', 'storage-commercial'
+            ]
+          };
+          
+          // Include products from subcategories belonging to this category
+          if (productSubcategory && categorySubcategoryIdMapping[targetCategoryId]) {
+            const validSubcategoryIds = categorySubcategoryIdMapping[targetCategoryId];
+            return validSubcategoryIds.some(validId => 
+              productSubcategory === validId ||
+              productSubcategory.toLowerCase() === validId.toLowerCase() ||
+              productSubcategory.toLowerCase().includes(validId.toLowerCase()) ||
+              validId.toLowerCase().includes(productSubcategory.toLowerCase())
+            );
+          }
+          
+          return false;
+        });
+      }
+      
+      console.log(`API: Fallback returned ${filtered.length} products for category: ${categoryName}`);
+      return { data: { products: filtered, totalProducts: filtered.length } };
+    }
+  },
+
+  // getByCategoryAlternative method starts here
   getByCategoryAlternative: async (categoryId, extraParams = {}) => {
     console.log('API: Getting products by alternative filter:', { categoryId, extraParams });
     try {
@@ -199,13 +390,30 @@ export const productAPI = {
       }
       
       // ENHANCED: Ensure we're sending the correct parameters to the filter endpoint
-      const response = await api.get('/products/filter', { 
-        params: { 
-          category: categoryId,
-          subcategory: extraParams.subcategory,
-          limit: 100,
-          ...extraParams 
-        } 
+      const params = { 
+        category: categoryId,
+        limit: 100,
+        ...extraParams 
+      };
+      
+      // Only add subcategory if it's specified and we're not including all subcategories
+      if (extraParams.subcategory && !extraParams.includeAllSubcategories) {
+        params.subcategory = extraParams.subcategory;
+      }
+      
+      // Add flag to include all subcategories when filtering by main category only
+      if (extraParams.includeAllSubcategories) {
+        params.includeAllSubcategories = true;
+      }
+      
+      const response = await api.get('/products/filter', { params });
+      
+      // Enhanced logging to debug category filtering
+      console.log('API: Category filter response:', {
+        category: categoryId,
+        subcategory: extraParams.subcategory,
+        productCount: response.data?.products?.length || (Array.isArray(response.data) ? response.data.length : 0),
+        products: response.data?.products || response.data
       });
       
       // Detailed logging to diagnose filtering issues

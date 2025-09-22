@@ -36,20 +36,106 @@ const formatProduct = (product) => {
  */
 exports.filterProducts = async (req, res) => {
   try {
-    const { category, subcategory, limit = 100, page = 1 } = req.query;
+    const { category, subcategory, limit = 100, page = 1, includeAllSubcategories } = req.query;
     console.log('Enhanced products filter API called with query:', req.query);
     
     // Construct query based on provided filters
     let query = {};
     
-    // Category filter - simplified
+    // Category filter - enhanced to include subcategory products when requested
     if (category && category !== 'all') {
-      console.log('Filtering by category:', category);
+      console.log('Filtering by category:', category, 'includeAllSubcategories:', includeAllSubcategories);
       
-      if (mongoose.Types.ObjectId.isValid(category)) {
-        query.categoryId = category;
+      // Enhanced logic: If includeAllSubcategories is true, fetch all products from category AND its subcategories
+      if (includeAllSubcategories === 'true' || includeAllSubcategories === true) {
+        console.log('Including all subcategory products for category:', category);
+        
+        // FIXED: Enhanced subcategory lookup to handle both string and ObjectId references
+        const categorySubcategories = await Subcategory.find({ 
+          $or: [
+            { category: new RegExp('^' + category + '$', 'i') }, // String-based category matching (for existing data)
+            // Also try ObjectId matching if category is a valid ObjectId (for new data)
+            ...(mongoose.Types.ObjectId.isValid(category) ? [{ categoryId: category }] : [])
+          ]
+        });
+        
+        const subcategoryNames = categorySubcategories.map(sub => sub.name);
+        console.log(`Found ${subcategoryNames.length} subcategories for category "${category}": [${subcategoryNames.join(', ')}]`);
+        
+        // FIXED: Enhanced mapping for existing products - handle known category-subcategory relationships
+        let additionalSubcategories = [];
+        
+        // For existing products, we need to map known relationships since they use string fields
+        const categorySubcategoryMapping = {
+          'Office Furniture': [
+            'Filing Cabinets', 'Office Chairs', 'Office Desks', 'Tables', 'Storage', 
+            'Workstations', 'Conference Tables', 'Reception Desks', 'Cabinets', 'Shelving'
+          ],
+          'Household Furniture': [
+            'Living Room', 'Bedroom', 'Kitchen', 'Dining Room', 'Storage', 'Beds',
+            'Sofas', 'Wardrobes', 'Dining Tables', 'TV Units', 'Bookshelves'
+          ],
+          'Commercial Furniture': [
+            'Restaurant', 'Hotel', 'Office', 'Retail', 'Hospitality', 'Cafe',
+            'Reception', 'Display Units', 'Counters', 'Seating'
+          ]
+        };
+        
+        // Add known subcategories for this category (for existing products)
+        if (categorySubcategoryMapping[category]) {
+          additionalSubcategories = categorySubcategoryMapping[category];
+          console.log(`Added ${additionalSubcategories.length} known subcategories for existing products`);
+        }
+        
+        // Combine database subcategories with known mappings
+        const allSubcategoryNames = [...new Set([...subcategoryNames, ...additionalSubcategories])];
+        console.log(`Total subcategories to include: [${allSubcategoryNames.join(', ')}]`);
+        
+        // Create comprehensive query to match:
+        // 1. Products directly assigned to this category (category field) - for existing products
+        // 2. Products assigned to any subcategory of this category (subcategory field) - for existing products
+        // 3. Handle both string and ObjectId references - for new products
+        const categoryRegex = new RegExp('^' + category + '$', 'i');
+        const subcategoryRegexes = allSubcategoryNames.map(name => new RegExp('^' + name + '$', 'i'));
+        
+        query = {
+          $or: [
+            // FIXED: Direct category assignment (string-based) - CRITICAL for existing products
+            { category: categoryRegex },
+            // Direct category assignment (ObjectId-based) - for new products
+            ...(mongoose.Types.ObjectId.isValid(category) ? [{ categoryId: category }] : []),
+            // FIXED: Subcategory assignment (string-based) - CRITICAL for existing products
+            { subcategory: { $in: subcategoryRegexes } },
+            // Subcategory assignment (ObjectId-based) - for new products
+            ...(categorySubcategories.length > 0 ? [{ subcategoryId: { $in: categorySubcategories.map(sub => sub._id) } }] : [])
+          ]
+        };
+        
+        console.log('FIXED: Comprehensive category + subcategories query created for existing and new products');
       } else {
-        query.category = { $regex: category, $options: 'i' };
+        // Original logic: Only direct category matching
+        if (mongoose.Types.ObjectId.isValid(category)) {
+          // ObjectId-based category matching
+          console.log('ObjectId category provided, finding category name...');
+          
+          try {
+            const categoryDoc = await Category.findById(category);
+            if (categoryDoc) {
+              console.log(`Found category name: ${categoryDoc.name} for ObjectId: ${category}`);
+              query.category = new RegExp('^' + categoryDoc.name + '$', 'i');
+            } else {
+              console.log('Category ObjectId not found, using ObjectId query');
+              query.categoryId = category;
+            }
+          } catch (err) {
+            console.log('Error finding category by ObjectId:', err.message);
+            query.categoryId = category;
+          }
+        } else {
+          // String-based category matching
+          console.log('String category provided for direct matching');
+          query.category = new RegExp('^' + category + '$', 'i');
+        }
       }
     }
     
@@ -57,10 +143,13 @@ exports.filterProducts = async (req, res) => {
     if (subcategory) {
       console.log('Filtering by subcategory:', subcategory);
       
+      // Since the database stores subcategories as strings, not ObjectIds
+      // The products have subcategoryId: null and subcategory: "Filing Cabinets" (string)
+      
       // Try both ObjectId and string matching for subcategory
       const subcategoryQuery = { $or: [] };
       
-      // Try ObjectId match
+      // Try ObjectId match first
       if (mongoose.Types.ObjectId.isValid(subcategory)) {
         subcategoryQuery.$or.push({ subcategoryId: subcategory });
         
@@ -76,13 +165,54 @@ exports.filterProducts = async (req, res) => {
         }
       }
       
-      // Also try string match (exact match, case insensitive)
+      // Also try string match (exact match, case insensitive) - this is the main path for our data
       subcategoryQuery.$or.push({ subcategory: new RegExp('^' + subcategory + '$', 'i') });
       
-      // Combine with existing query if needed
-      if (Object.keys(query).length > 0) {
-        query = { $and: [query, subcategoryQuery] };
+      // When both category and subcategory are specified, we need to ensure
+      // the subcategory filtering works correctly with the enhanced category query
+      if (category && category !== 'all') {
+        // Replace the query with a more specific one that includes subcategory
+        if (mongoose.Types.ObjectId.isValid(category)) {
+          // Try to get category name for ObjectId
+          try {
+            const categoryDoc = await Category.findById(category);
+            if (categoryDoc) {
+              query = {
+                $and: [
+                  { category: new RegExp('^' + categoryDoc.name + '$', 'i') }, // Must be in the specified category
+                  subcategoryQuery // And match the subcategory criteria
+                ]
+              };
+            } else {
+              // Fallback to ObjectId matching
+              query = {
+                $and: [
+                  { categoryId: category }, // Must be in the specified category
+                  subcategoryQuery // And match the subcategory criteria
+                ]
+              };
+            }
+          } catch (err) {
+            console.log('Error finding category for subcategory filter:', err.message);
+            // Fallback to ObjectId matching
+            query = {
+              $and: [
+                { categoryId: category }, // Must be in the specified category
+                subcategoryQuery // And match the subcategory criteria
+              ]
+            };
+          }
+        } else {
+          // String-based category with subcategory
+          query = {
+            $and: [
+              { category: new RegExp('^' + category + '$', 'i') }, // Must be in the specified category
+              subcategoryQuery // And match the subcategory criteria
+            ]
+          };
+        }
       } else {
+        // Only subcategory filter, no category filter
         query = subcategoryQuery;
       }
     }
@@ -126,19 +256,43 @@ exports.getAllProducts = async (req, res) => {
     const query = {};
     
     if (category) {
-      // Support both category name and categoryId
+      // Enhanced category filtering to include subcategory products
       if (mongoose.Types.ObjectId.isValid(category)) {
-        query.categoryId = category;
+        console.log('Getting all products for category including subcategories (getAllProducts)');
+        
+        // Find all subcategories that belong to this category
+        const categorySubcategories = await Subcategory.find({ categoryId: category });
+        const subcategoryIds = categorySubcategories.map(sub => sub._id);
+        
+        console.log(`Found ${subcategoryIds.length} subcategories for category ${category}`);
+        
+        // Create query to match:
+        // 1. Products directly assigned to this category
+        // 2. Products assigned to any subcategory of this category
+        query.$or = [
+          { categoryId: category }, // Direct category assignment
+          { subcategoryId: { $in: subcategoryIds } } // Subcategory assignment
+        ];
       } else {
+        // String-based category matching (fallback)
         query.category = { $regex: category, $options: 'i' };
       }
     }
     
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+      const searchQuery = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ]
+      };
+      
+      // If we already have a category query, combine them with $and
+      if (query.$or || Object.keys(query).length > 0) {
+        query = { $and: [query, searchQuery] };
+      } else {
+        query = searchQuery;
+      }
     }
     
     // Get products with category details

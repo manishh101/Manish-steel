@@ -455,7 +455,130 @@ const HomePage = () => {
       {/* Most Selling Products Section */}
       <CleanMostSellingSection />
       
-
+      {/* Call to Action */}
+      <section className="py-16 bg-primary text-white">
+        <div className="absolute top-0 left-0 w-full h-full opacity-5">
+          <div className="absolute transform -rotate-12 -left-10 top-10 text-9xl font-bold text-primary">"</div>
+          <div className="absolute transform rotate-12 -right-10 bottom-10 text-9xl font-bold text-primary">"</div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-primary text-center mb-3 animate-fadeIn">What Our Customers Say</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Discover why our customers trust us with their furniture needs. Here's what they have to say about their experience with Shree Manish Steel.</p>
+          </div>
+          
+          {/* Testimonial Cards with Navigation */}
+          <div className="relative">
+            {/* Previous Button */}
+            <button 
+              onClick={prevTestimonialPage}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 md:-ml-8 bg-white p-2 rounded-full shadow-lg z-20 hover:bg-primary hover:text-white transition-colors"
+              aria-label="Previous testimonials"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            {/* Testimonial Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {visibleTestimonials.map((testimonial, index) => (
+                <div 
+                  key={testimonial.id} 
+                  className="bg-white p-6 rounded-lg shadow-md transform hover:-translate-y-1 transition-transform duration-300 border border-gray-100 relative animate-fadeInUp"
+                  style={{animationDelay: `${0.1 + (index * 0.2)}s`}}
+                >
+                  {testimonial.verified && (
+                    <div className="absolute -top-3 -right-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full border border-green-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Verified
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center mb-4">
+                    {testimonial.image ? (
+                      <img 
+                        src={testimonial.image} 
+                        alt={testimonial.name} 
+                        className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-primary" 
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mr-4">
+                        <span className="text-primary font-bold">{testimonial.initials}</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center">
+                        <h4 className="font-bold">{testimonial.name}</h4>
+                        <span className="text-gray-500 text-sm ml-2">• {testimonial.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <svg 
+                              key={i}
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500 ml-2">{testimonial.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-500 mb-1">Purchased: {testimonial.productPurchased}</div>
+                    <p className="text-text/80 italic">"{testimonial.text}"</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Next Button */}
+            <button 
+              onClick={nextTestimonialPage}
+              className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 md:-mr-8 bg-white p-2 rounded-full shadow-lg z-20 hover:bg-primary hover:text-white transition-colors"
+              aria-label="Next testimonials"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Carousel Indicators */}
+          <div className="flex justify-center mt-8 gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button 
+                key={i}
+                onClick={() => setCurrentTestimonialPage(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${currentTestimonialPage === i ? 'bg-primary w-8' : 'bg-gray-300'}`}
+                aria-label={`Go to testimonial page ${i + 1}`}
+              />
+            ))}
+          </div>
+          
+          {/* View More Testimonials Link */}
+          <div className="text-center mt-8">
+            <Link 
+              to="/gallery#testimonials"
+              className="inline-flex items-center gap-2 text-primary font-medium hover:text-primary/80 transition-colors group"
+            >
+              View More Testimonials
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
       
       {/* Call to Action */}
       <section className="py-16 bg-primary text-white">

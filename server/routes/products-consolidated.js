@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const auth = require('../middleware/auth-secure').auth;
-const productController = require('../controllers/simpleProductController');
+const productController = require('../controllers/productController');
 
 /**
  * @route   GET api/products/filter
