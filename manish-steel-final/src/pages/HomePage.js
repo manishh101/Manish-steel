@@ -220,14 +220,14 @@ const HomePage = () => {
             {/* Left Content */}
             <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10 animate-fadeIn">
               <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 animate-slideInLeft">
-                <span className="block mb-2">Shree Manish Steel Furniture Industry</span>
-                Quality Steel Furniture for Every Space
+                <span className="block mb-2"> Furniture for Every Space </span>
+                <span className="text-2xl md:text-3xl text-gray-600">Made in Nepal</span>
               </h1>
-              <p className="text-lg md:text-xl text-text/80 mb-8 animate-slideInLeft" style={{animationDelay: '0.2s'}}>
-                Welcome to Shree Manish Steel Furniture Industry, where we craft durable, 
-                stylish, and functional steel furniture for homes and offices across Nepal.
+              <p className="text-lg text-text/80 mb-8 animate-slideInLeft" style={{animationDelay: '0.2s'}}>
+                Quality furniture for homes and offices at affordable prices. 
+                Serving Biratnagar and all of Nepal.
               </p>
-              <div className="flex flex-wrap gap-4 animate-slideInLeft" style={{animationDelay: '0.4s'}}>
+              <div className="flex flex-wrap gap-4 animate-slideInLeft" style={{animationDelay: '0.3s'}}>
                 <Link 
                   to="/products" 
                   className="bg-primary text-white font-bold px-6 py-3 rounded-md hover:bg-primary/80 transition-all hover:scale-105"
@@ -278,7 +278,7 @@ const HomePage = () => {
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
           <ScrollAnimator animation="fadeUp">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Our Furniture?</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Our Steel Furniture in Nepal?</h2>
           </ScrollAnimator>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -289,9 +289,10 @@ const HomePage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Durability</h3>
+                <h3 className="text-xl font-bold text-center mb-2">Premium Quality</h3>
                 <p className="text-center">
-                  Our furniture is built to last, using high-quality steel and precision manufacturing techniques.
+                  Our steel furniture is built to last decades, using premium-grade steel and precision manufacturing. 
+                  Best quality furniture in Biratnagar with lifetime durability guarantee.
                 </p>
               </div>
             </ScrollAnimator>
@@ -303,9 +304,10 @@ const HomePage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Design</h3>
+                <h3 className="text-xl font-bold text-center mb-2">Modern Design</h3>
                 <p className="text-center">
-                  Modern, functional designs that blend seamlessly with your decor and lifestyle.
+                  Contemporary and functional designs that blend perfectly with Nepali homes and offices. 
+                  Trendy furniture designs at affordable prices in Nepal.
                 </p>
               </div>
             </ScrollAnimator>
@@ -317,9 +319,10 @@ const HomePage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Fast Delivery</h3>
+                <h3 className="text-xl font-bold text-center mb-2">Fast Delivery in Nepal</h3>
                 <p className="text-center">
-                  Quick and reliable delivery service across Nepal with professional installation support.
+                  Quick and reliable furniture delivery service across Nepal. Same-day delivery in Biratnagar, 
+                  next-day delivery to Dharan, Itahari, and professional installation support.
                 </p>
               </div>
             </ScrollAnimator>
@@ -333,8 +336,8 @@ const HomePage = () => {
           <h2 className="text-3xl font-bold text-primary text-center mb-3 animate-fadeIn">
             Browse Our Collections
           </h2>
-          <p className="text-gray-600 text-center mb-12 animate-fadeIn" style={{animationDelay: '0.2s'}}>
-            Discover our comprehensive range of steel furniture designed for your needs
+          <p className="text-gray-600 text-center mb-12 animate-fadeIn max-w-2xl mx-auto" style={{animationDelay: '0.2s'}}>
+            Quality furniture for homes and offices. Modern designs at affordable prices.
           </p>
           
           {/* Display loading state or categories */}
@@ -585,13 +588,55 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Our Location Section */}
+      {/* Why Choose Us - Simplified */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-primary mb-6">
+              Nepal's Leading Steel Furniture Manufacturer
+            </h2>
+            
+            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+              Trusted by thousands of customers across Nepal for premium quality steel furniture 
+              at affordable prices.
+            </p>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-primary text-2xl">🏆</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">15+ Years Experience</h3>
+                <p className="text-gray-600 text-sm">Trusted manufacturing expertise</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-primary text-2xl">🚚</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Fast Delivery</h3>
+                <p className="text-gray-600 text-sm">Across Biratnagar, Dharan, Itahari & near by places</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-primary text-2xl">💎</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Premium Quality</h3>
+                <p className="text-gray-600 text-sm">5-year warranty & free installation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Location Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Location</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Visit our showroom to see our furniture collection in person
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Visit Our Showroom</h2>
+            <p className="text-lg text-gray-600 max-w-xl mx-auto">
+              Experience our furniture collection in person at our Biratnagar showroom.
             </p>
           </div>
           
@@ -637,7 +682,7 @@ const HomePage = () => {
               <div className="mt-6">
                 <Link
                   to="/contact"
-                  className="inline-flex items-center px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center px-4 py-2 md:px-6 md:py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors text-sm md:text-base"
                 >
                   Get Directions
                 </Link>

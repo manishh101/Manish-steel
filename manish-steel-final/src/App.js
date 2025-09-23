@@ -5,6 +5,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import LayoutWrapper from './components/LayoutWrapper';
 import ScrollToTop from './components/ScrollToTop';
 import ApiHealthCheck from './components/ApiHealthCheck';
+import SEOAnalytics from './components/SEOAnalytics';
+import PerformanceMonitor from './components/PerformanceMonitor';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ProductsPage from './pages/ProductsPage';
@@ -51,6 +53,8 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <SEOAnalytics />
+      <PerformanceMonitor />
       <ApiHealthCheck onStatusChange={setApiStatus} />
       <LayoutWrapper>
         <Routes>
