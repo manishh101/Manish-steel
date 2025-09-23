@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const runSeeders = require('./seeders');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 // Run the script to ensure uploads directory has valid images for backward compatibility
 require('./scripts/ensureUploads');
@@ -87,6 +88,33 @@ app.use(cors({
   maxAge: 86400 // 24 hours
 }));
 app.use(express.json({ limit: '50mb' })); // Increase JSON payload limit
+
+// Enhanced global rate limiting - more lenient for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Very generous limit for general API usage
+  message: {
+    error: 'Too many requests, please try again later',
+    retryAfter: 15 * 60 * 1000
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks, static files, and OPTIONS requests
+    return req.method === 'OPTIONS' || 
+           req.path.includes('/health') || 
+           req.path.includes('/uploads') || 
+           req.path.includes('/public') ||
+           req.path === '/' ||
+           req.path === '/api';
+  },
+  onLimitReached: (req, res, options) => {
+    console.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
+  }
+});
+
+// Apply rate limiting to API routes only
+app.use('/api', apiLimiter);
 
 // Serve static files from uploads directory for legacy image support
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -207,7 +235,7 @@ const connectDB = async () => {
 const PORT = process.env.PORT || 5000;
 
 // Start server first, then connect to database
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API URL: http://localhost:${PORT}/api`);
   
@@ -235,6 +263,11 @@ app.listen(PORT, () => {
     });
 });
 
+// Configure server timeouts to handle slow requests better
+server.timeout = 60000; // 60 seconds
+server.keepAliveTimeout = 65000; // 65 seconds (should be > timeout)
+server.headersTimeout = 66000; // 66 seconds (should be > keepAliveTimeout)
+
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
   console.error('⚠️ Server Error:', err);
@@ -248,10 +281,37 @@ app.use((err, req, res, next) => {
 
 // Handle server shutdown
 process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  if (mongod) {
-    await mongod.stop();
-  }
-  console.log('MongoDB connection closed');
-  process.exit(0);
+  console.log('Shutting down server gracefully...');
+  
+  server.close(async () => {
+    console.log('HTTP server closed');
+    
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed');
+    }
+    
+    process.exit(0);
+  });
+  
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.log('Forcing server shutdown...');
+    process.exit(1);
+  }, 10000);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  
+  server.close(async () => {
+    console.log('HTTP server closed');
+    
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed');
+    }
+    
+    process.exit(0);
+  });
 });

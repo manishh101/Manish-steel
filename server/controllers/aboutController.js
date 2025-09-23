@@ -24,6 +24,8 @@ exports.getAboutContent = asyncHandler(async (req, res) => {
         'Our journey has been defined by a commitment to craftsmanship, innovation, and customer satisfaction. We take pride in our Nepali heritage and continue to support local communities through employment opportunities and sustainable business practices.',
         'Today, we offer a comprehensive range of steel and wooden furniture solutions, from household almirahs to complete office setups, all designed with the unique needs of our customers in mind.'
       ],
+      yearsExperience: '10+',
+      happyCustomers: '1000+',
       
       // Vision & Mission
       vision: 'To be the leading furniture manufacturer in Nepal, recognized for quality, innovation, and customer service. We envision a future where every Nepali home and office is furnished with our durable, stylish, and affordable products.',
@@ -156,6 +158,8 @@ exports.updateAboutSection = asyncHandler(async (req, res) => {
         storyContent: [
           'Founded over a decade ago, Shree Manish Steel Furnitry Industry began with a simple mission: to create high-quality, affordable furniture for Nepali homes and businesses.'
         ],
+        yearsExperience: '10+',
+        happyCustomers: '1000+',
         vision: 'To be the leading furniture manufacturer in Nepal, recognized for quality, innovation, and customer service.',
         mission: 'To create furniture that combines functionality, durability, and aesthetic appeal at competitive prices.',
         coreValues: [],

@@ -26,72 +26,173 @@ const getInitialBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getInitialBaseUrl(),
+  timeout: 30000, // Increased from 5000ms to 30000ms for slower servers
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  // Add retry configuration
+  retry: 3,
+  retryDelay: 1000
 });
 
 // Flag to track API connectivity
 let isApiConnected = false;
+let connectionCheckInProgress = false;
 
-// Discover the API port and update the baseURL
+// Enhanced connection check with retry logic
+const checkConnection = async (baseUrl, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`Checking API connection (attempt ${i + 1}/${retries}):`, baseUrl);
+      const response = await axios.get(`${baseUrl}/health`, { 
+        timeout: 15000, // Increased timeout for health check
+        retry: 0 // Don't retry health checks
+      });
+      if (response.status === 200) {
+        console.log('✅ API connection successful');
+        return true;
+      }
+    } catch (error) {
+      console.warn(`❌ API connection attempt ${i + 1} failed:`, error.message);
+      if (i < retries - 1) {
+        // Wait before retrying with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
+    }
+  }
+  return false;
+};
+
+// Discover the API port and update the baseURL with improved error handling
 (async () => {
   try {
+    connectionCheckInProgress = true;
+    console.log('🔍 Discovering API port...');
     const discoveredBaseUrl = await portDiscovery.discoverPort();
     api.defaults.baseURL = discoveredBaseUrl;
+    console.log('📡 Updated API base URL to:', discoveredBaseUrl);
     
-    // Test the connection
-    try {
-      const healthResponse = await axios.get(`${discoveredBaseUrl}/health`, { timeout: 5000 });
-      if (healthResponse.status === 200) {
-        isApiConnected = true;
-      }
-    } catch (healthError) {
-      // Health check failed, API may be unreachable
-      isApiConnected = false;
+    // Test the connection with retry logic
+    isApiConnected = await checkConnection(discoveredBaseUrl);
+    
+    if (isApiConnected) {
+      console.log('🎉 API connection established successfully');
+    } else {
+      console.warn('⚠️ API connection failed - will use fallback data');
     }
   } catch (error) {
+    console.error('❌ Port discovery failed:', error.message);
     // Use default baseURL if port discovery fails
     isApiConnected = false;
+    console.log('🔄 Using default base URL as fallback');
+  } finally {
+    connectionCheckInProgress = false;
   }
 })();
 
-// Request interceptor to add authorization token
+// Enhanced request interceptor with retry logic
 api.interceptors.request.use(
   (config) => {
     const token = authService.getToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    
+    // Add request timestamp for debugging
+    config.metadata = { startTime: new Date() };
+    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor to handle token expiration
+// Enhanced response interceptor with retry logic and better error handling
 api.interceptors.response.use(
   (response) => {
+    // Log successful responses with timing
+    if (response.config.metadata) {
+      const duration = new Date() - response.config.metadata.startTime;
+      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} (${duration}ms)`);
+    }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 and we haven't tried to refresh the token yet
+    // Log error details
+    console.error(`❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}`, error.message);
+    
+    // Handle timeout errors with retry
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.warn('⏰ Request timeout detected');
+      
+      // Retry logic for timeout errors
+      if (!originalRequest._retryCount) {
+        originalRequest._retryCount = 0;
+      }
+      
+      if (originalRequest._retryCount < 2) { // Retry up to 2 times
+        originalRequest._retryCount++;
+        console.log(`🔄 Retrying request (attempt ${originalRequest._retryCount + 1}/3)...`);
+        
+        // Increase timeout for retry
+        originalRequest.timeout = Math.min(originalRequest.timeout * 1.5, 45000);
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, originalRequest._retryCount) * 1000));
+        
+        return api(originalRequest);
+      } else {
+        console.error('🚫 Max retries exceeded for timeout');
+        isApiConnected = false; // Mark API as disconnected
+      }
+    }
+    
+    // Handle connection errors
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ENETUNREACH') {
+      console.warn('🔌 Connection error detected, marking API as disconnected');
+      isApiConnected = false;
+    }
+    
+    // Handle rate limiting (429 status)
+    if (error.response?.status === 429) {
+      console.warn('🚫 Rate limit hit, waiting before retry...');
+      
+      // Extract retry-after header if available
+      const retryAfter = error.response.headers['retry-after'];
+      const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 5000; // Default 5 seconds
+      
+      if (!originalRequest._rateLimitRetry) {
+        originalRequest._rateLimitRetry = true;
+        
+        console.log(`⏳ Waiting ${waitTime}ms before retrying due to rate limit...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+        return api(originalRequest);
+      }
+    }
+    
+    // Handle token expiration (401 status)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      console.warn('🔑 Authentication error, attempting token refresh...');
       
       try {
         // Try to refresh the token
         const refreshed = await authService.refreshToken();
         
         if (refreshed) {
+          console.log('✅ Token refreshed successfully, retrying request...');
           // Update the token in the request and retry
           originalRequest.headers['Authorization'] = `Bearer ${authService.getToken()}`;
-          return axios(originalRequest);
+          return api(originalRequest);
         }
       } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError.message);
         // If refresh failed, logout the user
         authService.logout();
       }
@@ -115,16 +216,30 @@ export const authAPI = {
   register: (userData) => api.post('/users', userData)
 };
 
-// Product API Services with fallback
+// Product API Services with enhanced fallback and retry logic
 export const productAPI = {
   getAll: async (page = 1, limit = 100, params = {}) => {
     try {
+      // Check API connection and try to reconnect if needed
       if (!isApiConnected) {
-        throw new Error('API not connected');
+        console.log('🔄 API not connected, attempting to reconnect...');
+        const reconnected = await checkApiConnection(2);
+        if (!reconnected) {
+          throw new Error('API connection failed after retry');
+        }
       }
-      return await api.get('/products', { params: { page, limit, ...params } });
+      
+      console.log('📊 Fetching all products:', { page, limit, params });
+      const response = await api.get('/products', { 
+        params: { page, limit, ...params },
+        timeout: 20000 // Specific timeout for this endpoint
+      });
+      
+      console.log(`✅ Fetched ${response.data?.products?.length || response.data?.length || 0} products`);
+      return response;
     } catch (error) {
-      console.warn('Using fallback product data:', error.message);
+      console.warn('⚠️ Products API failed, using fallback data:', error.message);
+      
       // Return a mock response with the default products
       return {
         data: {
@@ -911,31 +1026,62 @@ export const aboutAPI = {
 };
 
 /**
- * Check API connection and try to reconnect if needed
+ * Enhanced API connection check with better retry logic
  * @param {number} retryCount - Number of connection attempts to make
  * @returns {Promise<boolean>} - Whether connection was successful
  */
-const checkApiConnection = async (retryCount = 1) => {
-  for (let i = 0; i < retryCount; i++) {
-    try {
-      const baseUrl = await portDiscovery.discoverPort();
-      const healthResponse = await axios.get(`${baseUrl}/health`, { timeout: 3000 });
-      
-      if (healthResponse.status === 200) {
-        isApiConnected = true;
-        return true;
+const checkApiConnection = async (retryCount = 3) => {
+  if (connectionCheckInProgress) {
+    console.log('⏳ Connection check already in progress, waiting...');
+    // Wait for ongoing connection check to complete
+    let attempts = 0;
+    while (connectionCheckInProgress && attempts < 30) { // Wait up to 30 seconds
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      attempts++;
+    }
+    return isApiConnected;
+  }
+
+  connectionCheckInProgress = true;
+  
+  try {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        console.log(`🔍 API connection check (attempt ${i + 1}/${retryCount})`);
+        
+        // Try port discovery first
+        const baseUrl = await portDiscovery.discoverPort();
+        api.defaults.baseURL = baseUrl;
+        
+        // Test with health endpoint
+        const healthResponse = await axios.get(`${baseUrl}/health`, { 
+          timeout: 15000,
+          retry: 0 // Don't retry within this call
+        });
+        
+        if (healthResponse.status === 200) {
+          console.log('✅ API connection restored');
+          isApiConnected = true;
+          return true;
+        }
+      } catch (error) {
+        console.warn(`❌ Connection attempt ${i + 1} failed:`, error.message);
+        
+        if (i < retryCount - 1) {
+          // Wait before next attempt with exponential backoff
+          const waitTime = Math.min(Math.pow(2, i) * 1000, 10000); // Max 10 seconds
+          console.log(`⏳ Waiting ${waitTime}ms before next attempt...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-    } catch (error) {
-      console.warn(`API connection attempt ${i + 1} failed`);
     }
     
-    // Wait a bit before retrying
-    if (i < retryCount - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    console.error('🚫 All connection attempts failed');
+    isApiConnected = false;
+    return false;
+  } finally {
+    connectionCheckInProgress = false;
   }
-  
-  return false;
 };
 
 // Export the API axios instance as default for backward compatibility

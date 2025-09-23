@@ -7,17 +7,22 @@ const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth-secure');
 
-// Rate limiting for login attempts
+// More lenient rate limiting for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 10, // Increased from 5 to 10 requests per windowMs
   message: {
     error: 'Too many login attempts, please try again after 15 minutes',
     retryAfter: 15 * 60 * 1000
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
+  // More lenient settings
+  skip: (req) => {
+    // Skip rate limiting for health checks and other non-sensitive endpoints
+    return req.path.includes('/health') || req.path.includes('/products');
+  }
 });
 
 /**

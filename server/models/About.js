@@ -28,6 +28,16 @@ const AboutSchema = new mongoose.Schema({
     required: true
   }],
   
+  // Company stats
+  yearsExperience: {
+    type: String,
+    default: '10+'
+  },
+  happyCustomers: {
+    type: String,
+    default: '1000+'
+  },
+  
   // Vision & Mission
   vision: {
     type: String,

@@ -18,7 +18,9 @@ const AdminAboutPage = () => {
   const [storySection, setStorySection] = useState({
     storyTitle: '',
     storyImage: '',
-    storyContent: ['']
+    storyContent: [''],
+    yearsExperience: '10+',
+    happyCustomers: '1000+'
   });
   const [visionMission, setVisionMission] = useState({ vision: '', mission: '' });
   const [coreValues, setCoreValues] = useState([]);
@@ -60,7 +62,16 @@ const AdminAboutPage = () => {
             storyImage: data.storyImage || '',
             storyContent: Array.isArray(data.storyContent) && data.storyContent.length > 0 
               ? data.storyContent 
-              : ['']
+              : [''],
+            yearsExperience: data.yearsExperience || '10+',
+            happyCustomers: data.happyCustomers || '1000+'
+          });
+          
+          // Log the extracted values for debugging
+          console.log('Extracted story section data:', {
+            yearsExperience: data.yearsExperience,
+            happyCustomers: data.happyCustomers,
+            storyTitle: data.storyTitle
           });
           
           setVisionMission({
@@ -79,7 +90,7 @@ const AdminAboutPage = () => {
           console.log('No about data received, using defaults');
           // Initialize with empty defaults if no data
           setHeroSection({ heroTitle: 'About Our Company', heroDescription: '' });
-          setStorySection({ storyTitle: 'Our Story', storyImage: '', storyContent: [''] });
+          setStorySection({ storyTitle: 'Our Story', storyImage: '', storyContent: [''], yearsExperience: '10+', happyCustomers: '1000+' });
           setVisionMission({ vision: '', mission: '' });
           setCoreValues([]);
           setWorkshopSection({ workshopTitle: 'Our Workshop & Team', workshopDescription: '', workshopImages: [] });
@@ -124,11 +135,20 @@ const AdminAboutPage = () => {
       setSaving(true);
       setError(null);
       
-      await saveAboutSection({
+      const dataToSave = {
         storyTitle: storySection.storyTitle,
         storyImage: storySection.storyImage,
-        storyContent: filteredContent
-      }, 'Story section');
+        storyContent: filteredContent,
+        yearsExperience: storySection.yearsExperience,
+        happyCustomers: storySection.happyCustomers
+      };
+      
+      console.log('Saving story section with data:', dataToSave); // Debug log
+      
+      await saveAboutSection(dataToSave, 'Story section');
+      
+      // Additional logging to verify state after save
+      console.log('Story section saved. Current storySection state:', storySection);
     } catch (error) {
       console.error('Error saving story section:', error);
       setError(`Failed to save story section: ${error.message || 'Unknown error'}`);
@@ -415,11 +435,13 @@ const AdminAboutPage = () => {
       };
       
       console.log(`Updating ${sectionName} section:`, sectionData);
+      console.log('Full updated data being sent:', updatedData);
       
       const response = await aboutAPI.updateContent(updatedData);
+      console.log('API response:', response.data);
       
       if (response.data && response.data.success) {
-        showSuccess(`${sectionName} updated successfully`);
+        showSuccess(`${sectionName} updated successfully! Refresh the About page to see changes.`);
         fetchAboutData(); // Refresh data
       } else {
         setError(`Failed to update ${sectionName}: ${response.data?.message || 'Unknown error'}`);
@@ -602,6 +624,36 @@ const AdminAboutPage = () => {
                 >
                   <PlusIcon className="h-4 w-4 mr-1" /> Add Paragraph
                 </button>
+              </div>
+              
+              {/* Stats Section */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Company Stats</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Years Experience</label>
+                    <input
+                      type="text"
+                      value={storySection.yearsExperience}
+                      onChange={(e) => setStorySection({...storySection, yearsExperience: e.target.value})}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      placeholder="10+"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Happy Customers</label>
+                    <input
+                      type="text"
+                      value={storySection.happyCustomers}
+                      onChange={(e) => setStorySection({...storySection, happyCustomers: e.target.value})}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      placeholder="1000+"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  These stats will appear below the story content on the About page.
+                </p>
               </div>
               
               <button
