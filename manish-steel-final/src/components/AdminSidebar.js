@@ -11,7 +11,8 @@ import {
   XMarkIcon,
   EnvelopeIcon,
   ShoppingBagIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
@@ -43,6 +44,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       path: '/admin/gallery',
       name: 'Gallery',
       icon: PhotoIcon
+    },
+    {
+      path: '/admin/homepage',
+      name: 'Homepage',
+      icon: HomeIcon
     },
     {
       path: '/admin/about',

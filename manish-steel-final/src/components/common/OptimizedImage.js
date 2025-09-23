@@ -139,10 +139,10 @@ const OptimizedImage = ({
       className={combinedClassName}
       style={style}
     >
-      {/* Loading placeholder */}
+      {/* Loading placeholder - with smoother transition */}
       {!imageState.loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
-          <FaImage className="w-8 h-8 text-gray-400" />
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 transition-opacity duration-500">
+          <FaImage className="w-8 h-8 text-gray-300" />
         </div>
       )}
 
@@ -157,8 +157,8 @@ const OptimizedImage = ({
           onLoad={handleLoad}
           onError={handleError}
           className={`
-            w-full h-full object-cover transition-opacity duration-300
-            ${imageState.loaded ? 'opacity-100' : 'opacity-0'}
+            w-full h-full object-cover transition-all duration-700 ease-in-out
+            ${imageState.loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}
           `}
           {...props}
         />

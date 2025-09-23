@@ -7,6 +7,14 @@
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Mobile positioning - above bottom navigation */
+@media (max-width: 768px) {
+  .floating-contact-widget {
+    bottom: 160px; /* Well above the mobile bottom navigation to avoid text overlap */
+    z-index: 60; /* Higher than bottom navigation z-40 */
+  }
+}
+
 /* Ensure the widget stays above other content */
 .floating-contact-widget * {
   box-sizing: border-box;

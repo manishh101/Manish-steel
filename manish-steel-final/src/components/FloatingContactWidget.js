@@ -77,7 +77,7 @@ const FloatingContactWidget = () => {
   };
 
   return (
-    <div className="floating-contact-widget fixed bottom-6 right-6 z-50">
+    <div className="floating-contact-widget fixed md:bottom-6 bottom-40 right-6 md:z-50 z-[60]">
       {/* Contact Options */}
       <AnimatePresence>
         {isOpen && (
@@ -86,7 +86,7 @@ const FloatingContactWidget = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute bottom-20 right-0 flex flex-col space-y-3 mb-4"
+            className="absolute md:bottom-20 bottom-32 right-0 flex flex-col space-y-3 mb-4"
           >
             {contactOptions.map((option, index) => (
               <motion.button
@@ -125,7 +125,7 @@ const FloatingContactWidget = () => {
       {/* Main Toggle Button */}
       <motion.button
         onClick={toggleWidget}
-        className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-500 transform hover:scale-110 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700`}
+        className={`w-16 h-16 md:w-16 md:h-16 w-20 h-20 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-500 transform hover:scale-110 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ 
           scale: 0.9,
@@ -152,10 +152,10 @@ const FloatingContactWidget = () => {
           className="relative z-10"
         >
           {isOpen ? (
-            <XMarkIcon className="w-8 h-8" />
+            <XMarkIcon className="w-8 h-8 md:w-8 md:h-8 w-10 h-10" />
           ) : (
             <div className="relative">
-              <ChatBubbleLeftRightIcon className="w-8 h-8" />
+              <ChatBubbleLeftRightIcon className="w-8 h-8 md:w-8 md:h-8 w-10 h-10" />
               {/* Pulse ring animation */}
               <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping"></div>
               <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse"></div>
@@ -164,7 +164,7 @@ const FloatingContactWidget = () => {
         </motion.div>
       </motion.button>
 
-      {/* Contact Us Label */}
+      {/* Contact Us Label - Hidden on mobile */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
@@ -172,7 +172,7 @@ const FloatingContactWidget = () => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.8 }}
             transition={{ duration: 0.3 }}
-            className="absolute right-20 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm text-gray-800 text-sm px-4 py-2 rounded-xl shadow-xl border border-gray-200 whitespace-nowrap pointer-events-none"
+            className="absolute md:right-20 right-28 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm text-gray-800 text-sm px-4 py-2 rounded-xl shadow-xl border border-gray-200 whitespace-nowrap pointer-events-none hidden md:block"
           >
             <div className="font-medium text-gray-900">Contact Us</div>
             <div className="text-xs text-gray-600">We're here to help!</div>

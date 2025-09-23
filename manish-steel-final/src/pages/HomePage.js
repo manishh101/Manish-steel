@@ -20,6 +20,9 @@ const HomePage = () => {
   const [categoryThumbnails, setCategoryThumbnails] = useState({});
   // Additional loading state for thumbnails
   const [loadingThumbnails, setLoadingThumbnails] = useState(true);
+  // State for hero image - with stability to prevent flashing
+  const [heroImage, setHeroImage] = useState(homePageImage);
+  const [imageKey, setImageKey] = useState(Date.now()); // Force re-render when image changes
   
   // State for testimonial carousel
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
@@ -53,6 +56,67 @@ const HomePage = () => {
       console.error('Error loading contact info or services:', error);
     }
   }, []);
+
+  // Load hero image from homepage settings - with live updates from admin panel
+  useEffect(() => {
+    const loadHeroImage = () => {
+      try {
+        const savedSettings = localStorage.getItem('homepageSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          if (settings.heroImage && settings.heroImage !== heroImage) {
+            console.log('Loading hero image from settings:', settings.heroImage);
+            // Check if it's a base64 data URL or a file path
+            if (settings.heroImage.startsWith('data:')) {
+              console.log('Using base64 image from upload');
+            } else {
+              console.log('Using file path image');
+            }
+            setHeroImage(settings.heroImage);
+            setImageKey(Date.now()); // Force re-render only when image actually changes
+          }
+        } else {
+          // No settings found, use default
+          console.log('No homepage settings found, using default image:', homePageImage);
+          if (heroImage !== homePageImage) {
+            setHeroImage(homePageImage);
+            setImageKey(Date.now());
+          }
+        }
+      } catch (error) {
+        console.error('Error loading homepage settings:', error);
+        // Fallback to default image on error
+        console.log('Falling back to default image due to error');
+        if (heroImage !== homePageImage) {
+          setHeroImage(homePageImage);
+          setImageKey(Date.now());
+        }
+      }
+    };
+
+    // Load initially
+    loadHeroImage();
+
+    // Listen for storage changes (when admin panel updates the image)
+    const handleStorageChange = (e) => {
+      if (e.key === 'homepageSettings') {
+        loadHeroImage();
+      }
+    };
+
+    // Listen for custom events when localStorage is updated from same tab
+    const handleHomepageUpdate = () => {
+      loadHeroImage();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('homepageSettingsUpdated', handleHomepageUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('homepageSettingsUpdated', handleHomepageUpdate);
+    };
+  }, []); // Keep empty dependency to set up listeners once
 
   // Preload common products when component mounts for instant browsing
   useEffect(() => {
@@ -184,12 +248,24 @@ const HomePage = () => {
             {/* Right Image */}
             <div className="md:w-1/2 animate-fadeIn" style={{animationDelay: '0.3s'}}>
               <div className="relative">
-                <img 
-                  src={homePageImage} 
+                <img
+                  key={imageKey}
+                  src={heroImage} 
                   alt="Manish Steel Furniture Collection" 
-                  className="w-full rounded-lg shadow-xl animate-float"
+                  className="w-full h-auto rounded-lg shadow-xl object-cover"
+                  style={{ minHeight: '400px', maxHeight: '500px' }}
+                  onLoad={() => {
+                    console.log('Hero image loaded successfully:', heroImage);
+                  }}
+                  onError={(e) => {
+                    console.log('Hero image failed, using fallback:', homePageImage);
+                    // Fallback to default image if custom image fails to load
+                    if (e.target.src !== homePageImage) {
+                      e.target.src = homePageImage;
+                    }
+                  }}
                 />
-                <div className="absolute -bottom-4 -right-4 bg-accent w-24 h-24 rounded-full flex items-center justify-center text-primary font-bold text-lg z-10 animate-pulse">
+                <div className="absolute -bottom-4 -right-4 bg-accent w-24 h-24 rounded-full flex items-center justify-center text-primary font-bold text-lg z-10">
                   New<br/>Designs
                 </div>
               </div>

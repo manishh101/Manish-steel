@@ -8,7 +8,8 @@ import {
   PhotoIcon,
   PhoneIcon,
   EnvelopeIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CogIcon
 } from '@heroicons/react/24/outline';
 
 const sidebarLinks = [
@@ -16,6 +17,7 @@ const sidebarLinks = [
   { name: 'Products', path: '/admin/products', icon: <Squares2X2Icon className="w-5 h-5" /> },
   { name: 'Categories', path: '/admin/categories', icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
   { name: 'Gallery', path: '/admin/gallery', icon: <PhotoIcon className="w-5 h-5" /> },
+  { name: 'Homepage', path: '/admin/homepage', icon: <CogIcon className="w-5 h-5" /> },
   { name: 'Contact Info', path: '/admin/contact', icon: <PhoneIcon className="w-5 h-5" /> },
   { name: 'Inquiries', path: '/admin/inquiries', icon: <EnvelopeIcon className="w-5 h-5" /> },
 ];
