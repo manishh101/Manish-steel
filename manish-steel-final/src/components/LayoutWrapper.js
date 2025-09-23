@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
-import WhatsAppButton from './WhatsAppButton';
 import BottomNavigation from './BottomNavigation';
 import MobileMenuDrawer from './MobileMenuDrawer';
 import CategoryDrawer from './CategoryDrawer';
@@ -118,7 +117,6 @@ const LayoutWrapper = ({ children }) => {
       </main>
       
       {!isAdminRoute && <Footer />}
-      {!isAdminRoute && <WhatsAppButton />}
       
       {!isAdminRoute && (
         <BottomNavigation 

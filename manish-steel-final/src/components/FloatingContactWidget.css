@@ -1,0 +1,185 @@
+/* Professional Floating Contact Widget Styles */
+.floating-contact-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Ensure the widget stays above other content */
+.floating-contact-widget * {
+  box-sizing: border-box;
+}
+
+/* Professional smooth transitions */
+.floating-contact-widget button {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced pulse animation with professional timing */
+@keyframes professionalPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.floating-contact-widget .pulse {
+  animation: professionalPulse 3s ease-in-out infinite;
+}
+
+/* Floating particles animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.8;
+  }
+}
+
+.floating-particle {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Gradient overlay animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Professional hover effects */
+.floating-contact-widget button:hover {
+  transform: translateY(-2px) scale(1.05);
+  filter: brightness(1.1);
+}
+
+.floating-contact-widget button:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Enhanced shadow effects */
+.contact-button-shadow {
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.15),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile responsiveness with professional spacing */
+@media (max-width: 768px) {
+  .floating-contact-widget {
+    bottom: 20px;
+    right: 16px;
+    scale: 0.9;
+  }
+  
+  .floating-contact-widget button {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  
+  .floating-contact-widget .contact-option {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 10px !important;
+  }
+
+  /* Adjust tooltip positioning on mobile */
+  .floating-contact-widget .group:hover .absolute {
+    right: calc(100% + 8px);
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-contact-widget {
+    bottom: 16px;
+    right: 12px;
+    scale: 0.85;
+  }
+}
+
+/* Accessibility improvements */
+.floating-contact-widget button:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.5),
+    0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.floating-contact-widget button:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .floating-contact-widget button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .floating-contact-widget * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .floating-contact-widget .tooltip {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(229, 231, 235, 0.5);
+    color: #374151;
+  }
+}
+
+/* Professional steel-inspired effects */
+.steel-gradient {
+  background: linear-gradient(135deg, 
+    #3b82f6 0%, 
+    #2563eb 25%, 
+    #1d4ed8 50%, 
+    #1e40af 75%, 
+    #1e3a8a 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* Loading state */
+.floating-contact-widget.loading button {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Professional glow effect */
+.professional-glow {
+  box-shadow: 
+    0 0 20px rgba(99, 102, 241, 0.3),
+    0 0 40px rgba(99, 102, 241, 0.1),
+    0 0 60px rgba(99, 102, 241, 0.05);
+}

@@ -28,6 +28,7 @@ import AdminCustomOrders from './pages/admin/AdminCustomOrders';
 import ServicesManager from './components/admin/ServicesManager';
 import MobileDiagnostics from './components/MobileDiagnostics';
 import diagnosticsEnabler from './utils/diagnosticsEnabler';
+import FloatingContactWidget from './components/FloatingContactWidget';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -88,6 +89,10 @@ function App() {
 
           </Routes>
       </LayoutWrapper>
+      
+      {/* Floating Contact Widget */}
+      <FloatingContactWidget />
+      
       {/* Mobile diagnostics panel - only shown when ?debug=true is in the URL */}
       <MobileDiagnostics show={showDiagnostics} />
       

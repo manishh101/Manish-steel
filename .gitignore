@@ -71,3 +71,10 @@ yarn.lock
 # Upload directories (except .gitkeep)
 uploads/*
 !uploads/.gitkeep
+.env.development
+dist/
+build/
+uploads/
+temp_backup/
+.venv/
+__pycache__/

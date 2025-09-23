@@ -21,6 +21,16 @@ const ProductCard = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Handle image loading - Hooks must be called before any early returns
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+    setImageLoaded(true);
+  }, []);
+
   // Safety check for product data
   if (!product) {
     console.warn('ProductCard: No product data provided');
@@ -71,16 +81,6 @@ const ProductCard = ({
     salesCount: product.salesCount || salesCount || null,
     ...product // Spread original product to keep any additional properties
   };
-
-  // Handle image loading
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-  }, []);
-
-  const handleImageError = useCallback(() => {
-    setImageError(true);
-    setImageLoaded(true);
-  }, []);
 
   // Handle product link click with scroll to top
   const handleProductClick = (e) => {

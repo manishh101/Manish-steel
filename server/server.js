@@ -7,9 +7,6 @@ const runSeeders = require('./seeders');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
-// Run the script to ensure uploads directory has valid images for backward compatibility
-require('./scripts/ensureUploads');
-
 // Import Cloudinary configuration
 const { cloudinary, testConnection } = require('./utils/cloudinarySetup');
 
