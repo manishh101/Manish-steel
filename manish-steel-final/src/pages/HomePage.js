@@ -10,7 +10,7 @@ import CleanMostSellingSection from '../components/CleanMostSellingSection';
 import { testimonials } from '../data/testimonials';
 import ScrollAnimator from '../components/ScrollAnimator';
 import OptimizedImage from '../components/common/OptimizedImage';
-import ApiDebugger from '../components/ApiDebugger';
+// ApiDebugger removed for production
 import { getContactInfo, getServices } from '../utils/storage';
 
 const HomePage = () => {
@@ -657,6 +657,28 @@ const HomePage = () => {
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Shree Manish Steel Furniture Location"
                   className="w-full h-full"
+                  onError={(e) => {
+                    // Silently handle iframe errors in production
+                    if (process.env.NODE_ENV === 'production') {
+                      e.target.style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => {
+                    // Suppress any console errors from the iframe content
+                    if (process.env.NODE_ENV === 'production') {
+                      try {
+                        const iframe = document.querySelector('iframe[title="Shree Manish Steel Furniture Location"]');
+                        if (iframe && iframe.contentWindow) {
+                          iframe.contentWindow.console = { 
+                            ...iframe.contentWindow.console,
+                            error: () => {} // Suppress errors
+                          };
+                        }
+                      } catch (e) {
+                        // Cross-origin access may be blocked, that's fine
+                      }
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -789,12 +811,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Temporary API Debugger - remove after fixing issues */}
-      {process.env.NODE_ENV !== 'production' && (
-        <div className="container mx-auto px-4 py-8">
-          <ApiDebugger />
-        </div>
-      )}
+      {/* API Debugger completely removed for production */}
     </div>
   );
 };

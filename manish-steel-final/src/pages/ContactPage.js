@@ -269,8 +269,26 @@ const ContactPage = () => {
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Manish Steel Furniture Location"
                   onError={(e) => {
-                    // Hide the iframe on error
-                    e.target.style.display = 'none';
+                    // Silently handle iframe errors in production
+                    if (process.env.NODE_ENV === 'production') {
+                      e.target.style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => {
+                    // Suppress any console errors from the iframe content
+                    if (process.env.NODE_ENV === 'production') {
+                      try {
+                        const iframe = document.querySelector('iframe[title="Manish Steel Furniture Location"]');
+                        if (iframe && iframe.contentWindow) {
+                          iframe.contentWindow.console = { 
+                            ...iframe.contentWindow.console,
+                            error: () => {} // Suppress errors
+                          };
+                        }
+                      } catch (e) {
+                        // Cross-origin access may be blocked, that's fine
+                      }
+                    }
                   }}
                 ></iframe>
               </div>
