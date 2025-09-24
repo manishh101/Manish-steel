@@ -1,39 +1,10 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /api/
-Disallow: /_next/
-Disallow: /static/
 
-# Sitemap
-Sitemap: https://manish-steel.vercel.app/sitemap.xml
+Sitemap: https://manishsteelfurniture.com.np/sitemap.xml
 
-# Crawl-delay for better server performance
-Crawl-delay: 1
-
-# Allow all major search engines
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-# Block malicious bots
-User-agent: SemrushBot
-Disallow: /
-
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
+# Block access to admin areas
+Disallow: /admin
+Disallow: /api
+Disallow: /_next
+Disallow: /static

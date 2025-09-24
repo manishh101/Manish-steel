@@ -64,5 +64,6 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.3.0"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "homepage": "https://manishsteelfurniture.com.np"
 }
