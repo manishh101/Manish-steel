@@ -1,0 +1,12 @@
+# Vercel ignore file
+node_modules
+.git
+*.log
+.env.local
+.env.development
+.env.test
+.DS_Store
+coverage
+.nyc_output
+*.tgz
+*.tar.gz

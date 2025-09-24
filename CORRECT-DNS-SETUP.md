@@ -16,11 +16,13 @@
 ### Step 1.3: Configure Deployment
 ```
 Project Name: manish-steel-furniture
-Framework Preset: Create React App
+Framework Preset: Create React App (Auto-detected)
 Root Directory: manish-steel-final/
-Build Command: npm run build
-Output Directory: build/
-Install Command: npm install
+Build Command: npm run build (Auto-detected)
+Output Directory: build (Auto-detected)
+Install Command: npm install (Auto-detected)
+
+⚠️ IMPORTANT: Remove vercel.json if you have one - let Vercel auto-detect!
 ```
 
 ### Step 1.4: Deploy
