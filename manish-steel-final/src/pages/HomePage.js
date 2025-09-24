@@ -220,7 +220,7 @@ const HomePage = () => {
             {/* Left Content */}
             <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10 animate-fadeIn">
               <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 animate-slideInLeft">
-                <span className="block mb-2"> Furniture for Every Space </span>
+                <span className="block mb-2">Furniture for Every Space </span>
                 <span className="text-2xl md:text-3xl text-gray-600">Made in Nepal</span>
               </h1>
               <p className="text-lg text-text/80 mb-8 animate-slideInLeft" style={{animationDelay: '0.2s'}}>
@@ -566,7 +566,7 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
+            <h2 className="text-4xl font-bold text-primary mb-4">Our Services</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Comprehensive furniture solutions tailored to your needs
             </p>
@@ -634,7 +634,7 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Visit Our Showroom</h2>
+            <h2 className="text-3xl font-bold text-primary mb-4">Visit Our Showroom</h2>
             <p className="text-lg text-gray-600 max-w-xl mx-auto">
               Experience our furniture collection in person at our Biratnagar showroom.
             </p>

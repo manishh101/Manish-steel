@@ -92,7 +92,7 @@ const CleanTopProductsSection = () => {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
             <FaStar className="text-3xl text-yellow-500 mr-3" />
-            <h2 className="text-4xl font-bold text-gray-900">Our Top Products</h2>
+            <h2 className="text-4xl font-bold text-primary">Our Top Products</h2>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Handpicked premium steel furniture that represents the best of our craftsmanship and design excellence.
