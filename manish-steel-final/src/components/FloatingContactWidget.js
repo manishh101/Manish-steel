@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatBubbleLeftRightIcon,
@@ -7,6 +8,7 @@ import {
   MapPinIcon,
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
+import authService from '../services/authService';
 
 const WhatsAppIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -22,6 +24,16 @@ const ViberIcon = () => (
 
 const FloatingContactWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  
+  // Check if we're on an admin route and user is authenticated as admin
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminAuthenticated = authService.isAdmin();
+  
+  // Hide the widget if user is in admin panel and is authenticated as admin
+  if (isAdminRoute && isAdminAuthenticated) {
+    return null;
+  }
 
   const contactOptions = [
     {
