@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 // Middleware
 // Configure CORS to allow requests from frontend
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  ? process.env.ALLOWED_ORIGINS.split(',') 
   : ['http://localhost:3000', 
      'https://manishsteelfurniture.com.np',
      'https://www.manishsteelfurniture.com.np',
@@ -107,8 +107,12 @@ const apiLimiter = rateLimit({
            req.path === '/' ||
            req.path === '/api';
   },
-  onLimitReached: (req, res, options) => {
+  handler: (req, res) => {
     console.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
+    res.status(429).json({
+      error: 'Too many requests, please try again later',
+      retryAfter: 15 * 60 * 1000
+    });
   }
 });
 

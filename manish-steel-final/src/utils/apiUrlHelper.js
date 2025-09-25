@@ -13,15 +13,19 @@
 export const sanitizeApiUrl = (url) => {
   if (!url) return '';
   
-  let cleanUrl = url;
+  let cleanUrl = url.trim();
   
   // Ensure URL has proper protocol
   if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-    // Fix malformed protocols like "https//" to "https://"
-    if (cleanUrl.startsWith('http/')) {
-      cleanUrl = cleanUrl.replace('http/', 'http://');
+    // Fix malformed protocols like "https//" to "https://" or "http//" to "http://"
+    if (cleanUrl.startsWith('https:/')) {
+      cleanUrl = 'https://' + cleanUrl.substring(7);
+    } else if (cleanUrl.startsWith('http:/')) {
+      cleanUrl = 'http://' + cleanUrl.substring(6);
     } else if (cleanUrl.startsWith('https/')) {
-      cleanUrl = cleanUrl.replace('https/', 'https://');
+      cleanUrl = 'https://' + cleanUrl.substring(6);
+    } else if (cleanUrl.startsWith('http/')) {
+      cleanUrl = 'http://' + cleanUrl.substring(5);
     } else {
       // Use https by default unless explicitly on localhost
       if (cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1')) {
@@ -32,8 +36,16 @@ export const sanitizeApiUrl = (url) => {
     }
   }
   
-  // Fix double slashes in the URL (except after protocol)
-  cleanUrl = cleanUrl.replace(/([^:])\/\//g, '$1/');
+  // Fix multiple consecutive slashes in the path (but preserve protocol slashes)
+  // Split by protocol to preserve '://'
+  const protocolMatch = cleanUrl.match(/^(https?:\/\/)/);
+  if (protocolMatch) {
+    const protocol = protocolMatch[1];
+    const rest = cleanUrl.substring(protocol.length);
+    // Replace multiple slashes with single slash in the path part only
+    const cleanRest = rest.replace(/\/+/g, '/');
+    cleanUrl = protocol + cleanRest;
+  }
   
   // Remove trailing slash if present
   if (cleanUrl.endsWith('/')) {
