@@ -53,6 +53,8 @@ app.use((req, res, next) => {
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : ['http://localhost:3000', 
+     'https://manishsteelfurniture.com.np',
+     'https://www.manishsteelfurniture.com.np',
      'https://manish-steel-furniture.vercel.app', 
      'https://manish-steel-furniture-m9ayaff4c-manishh101s-projects.vercel.app',
      'https://manish-steel-furniture-git-main-manishh101s-projects.vercel.app',
