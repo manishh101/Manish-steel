@@ -10,6 +10,7 @@ const AdminContact = () => {
     businessHours: '',
     social: {
       whatsapp: '',
+      viber: '',
       facebook: '',
       instagram: '',
       tiktok: '',
@@ -36,6 +37,7 @@ const AdminContact = () => {
         businessHours: contactInfo?.businessHours || '',
         social: {
           whatsapp: contactInfo?.social?.whatsapp || '',
+          viber: contactInfo?.social?.viber || '',
           facebook: contactInfo?.social?.facebook || '',
           instagram: contactInfo?.social?.instagram || '',
           tiktok: contactInfo?.social?.tiktok || '',
@@ -231,7 +233,19 @@ const AdminContact = () => {
                   value={formData.social.whatsapp}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="WhatsApp link"
+                  placeholder="WhatsApp link or number (e.g., https://wa.me/9779824336371)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Viber</label>
+                <input
+                  type="text"
+                  name="social.viber"
+                  value={formData.social.viber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  placeholder="Viber number (e.g., 9779824336371)"
                 />
               </div>
               

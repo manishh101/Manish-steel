@@ -105,6 +105,7 @@ const initialContactInfo = {
   businessHours: 'Sunday - Friday: 8:00 AM - 7:00 PM\nSaturday: 8:00 AM - 12:00 PM',
   social: {
     whatsapp: 'https://wa.me/9779824336371',
+    viber: '9779824336371',
     facebook: 'https://www.facebook.com/profile.php?id=61576758530152',
     instagram: 'https://www.instagram.com/shreemanishfurniture',
     tiktok: 'https://tiktok.com',

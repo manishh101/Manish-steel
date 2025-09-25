@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,6 +9,7 @@ import {
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
 import authService from '../services/authService';
+import { getContactInfo } from '../utils/storage';
 
 const WhatsAppIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -24,7 +25,26 @@ const ViberIcon = () => (
 
 const FloatingContactWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null);
   const location = useLocation();
+  
+  // Load contact info on component mount
+  useEffect(() => {
+    try {
+      const info = getContactInfo();
+      setContactInfo(info);
+    } catch (error) {
+      console.error('Error loading contact info for widget:', error);
+      // Set fallback values if error occurs
+      setContactInfo({
+        phone: '+977 9824336371',
+        social: {
+          whatsapp: 'https://wa.me/9779824336371',
+          viber: '9779824336371'
+        }
+      });
+    }
+  }, []);
   
   // Check if we're on an admin route and user is authenticated as admin
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -34,27 +54,61 @@ const FloatingContactWidget = () => {
   if (isAdminRoute && isAdminAuthenticated) {
     return null;
   }
+  
+  // Don't render if contact info is not loaded yet
+  if (!contactInfo) {
+    return null;
+  }
+
+  // Helper function to extract phone number from various formats
+  const extractPhoneNumber = (phoneStr) => {
+    if (!phoneStr) return '';
+    // Remove all non-digits and extract the number
+    const digits = phoneStr.replace(/\D/g, '');
+    // If it starts with 977, it's already international format
+    if (digits.startsWith('977')) {
+      return digits;
+    }
+    // If it's a 10-digit number starting with 9, add country code
+    if (digits.length === 10 && digits.startsWith('9')) {
+      return `977${digits}`;
+    }
+    return digits;
+  };
+
+  // Extract WhatsApp URL or number
+  const getWhatsAppUrl = () => {
+    const whatsapp = contactInfo.social?.whatsapp || '';
+    if (whatsapp.includes('wa.me/') || whatsapp.includes('whatsapp.com/')) {
+      return whatsapp.includes('?text=') 
+        ? whatsapp 
+        : `${whatsapp}?text=Hello! I am interested in your steel furniture products from Manish Steel.`;
+    }
+    // If it's just a number, create WhatsApp URL
+    const phoneNumber = extractPhoneNumber(whatsapp || contactInfo.phone);
+    return `https://wa.me/${phoneNumber}?text=Hello! I am interested in your steel furniture products from Manish Steel.`;
+  };
 
   const contactOptions = [
     {
       name: 'WhatsApp',
       icon: <WhatsAppIcon />,
       color: 'bg-[#25D366] hover:bg-[#1DA851]',
-      action: () => window.open('https://wa.me/9779824336371?text=Hello! I am interested in your steel furniture products from Manish Steel.', '_blank'),
+      action: () => window.open(getWhatsAppUrl(), '_blank'),
       label: 'Chat on WhatsApp'
     },
     {
       name: 'Call Us',
       icon: <PhoneIcon className="w-5 h-5" />,
       color: 'bg-[#0066CC] hover:bg-[#0052A3]',
-      action: () => window.open('tel:+9779824336371', '_self'),
+      action: () => window.open(`tel:${contactInfo.phone || '+977 9824336371'}`, '_self'),
       label: 'Call Now'
     },
     {
       name: 'Viber',
       icon: <ViberIcon />,
       color: 'bg-[#665CAC] hover:bg-[#574B8C]',
-      action: () => window.open('viber://chat?number=9779824336371', '_self'),
+      action: () => window.open(`viber://chat?number=${extractPhoneNumber(contactInfo.social?.viber || contactInfo.phone)}`, '_self'),
       label: 'Chat on Viber'
     },
     {
