@@ -26,13 +26,13 @@ const getInitialBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getInitialBaseUrl(),
-  timeout: 30000, // Increased from 5000ms to 30000ms for slower servers
+  timeout: 60000, // Increased to 60 seconds for Render cold starts
   headers: {
     'Content-Type': 'application/json'
   },
   // Add retry configuration
   retry: 3,
-  retryDelay: 1000
+  retryDelay: 2000 // Increased retry delay for cold starts
 });
 
 // Flag to track API connectivity

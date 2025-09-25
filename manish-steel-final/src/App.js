@@ -7,6 +7,8 @@ import ScrollToTop from './components/ScrollToTop';
 import ApiHealthCheck from './components/ApiHealthCheck';
 import SEOAnalytics from './components/SEOAnalytics';
 import PerformanceMonitor from './components/PerformanceMonitor';
+import ColdStartNotification from './components/ColdStartNotification';
+import PreloadService from './services/preloadService';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ProductsPage from './pages/ProductsPage';
@@ -40,7 +42,7 @@ function App() {
   const [apiStatus, setApiStatus] = useState('checking');
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
-  // Check if diagnostics mode is enabled
+  // Check if diagnostics mode is enabled and initialize preload service
   useEffect(() => {
     const isDiagnosticsMode = diagnosticsEnabler.isDiagnosticsEnabled();
     setShowDiagnostics(isDiagnosticsMode);
@@ -48,6 +50,9 @@ function App() {
     if (isDiagnosticsMode) {
       diagnosticsEnabler.showDiagnosticsNotice();
     }
+
+    // Initialize preload service to warm up the server
+    PreloadService.init();
   }, []);
 
   return (
@@ -95,6 +100,9 @@ function App() {
 
           </Routes>
       </LayoutWrapper>
+      
+      {/* Cold Start Notification */}
+      <ColdStartNotification />
       
       {/* Floating Contact Widget */}
       <FloatingContactWidget />
