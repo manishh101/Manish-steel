@@ -1,6 +1,6 @@
 /**
- * Server entry point
+ * Server entry point for Vercel Serverless
  */
 
-// Just require the server.js file which has all the logic
-require('./server');
+// Export the app from server.js for Vercel
+module.exports = require('./server');

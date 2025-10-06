@@ -265,6 +265,17 @@ const connectDB = async () => {
 // Define PORT - use 5000 to match frontend proxy
 const PORT = process.env.PORT || 5000;
 
+// Enhanced error handling middleware (must be before export)
+app.use((err, req, res, next) => {
+  console.error('⚠️ Server Error:', err);
+  console.error('Stack trace:', err.stack);
+  
+  res.status(err.status || 500).json({
+    message: err.message || 'Something went wrong on the server',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
+});
+
 // For Vercel serverless deployment, export the app
 // For traditional hosting, start the server
 if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
@@ -273,9 +284,6 @@ if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
   connectDB()
     .then(() => console.log('Database connected for serverless function'))
     .catch(err => console.error('Database connection error:', err));
-  
-  // Export app for Vercel
-  module.exports = app;
 } else {
   // Traditional server mode
   const server = app.listen(PORT, () => {
@@ -349,13 +357,5 @@ if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
   });
 }
 
-// Enhanced error handling middleware
-app.use((err, req, res, next) => {
-  console.error('⚠️ Server Error:', err);
-  console.error('Stack trace:', err.stack);
-  
-  res.status(err.status || 500).json({
-    message: err.message || 'Something went wrong on the server',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
+// Always export the app for serverless environments (Vercel)
+module.exports = app;
