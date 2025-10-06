@@ -1,0 +1,53 @@
+# Vercel Ignore File
+# Prevents unnecessary files from being uploaded to Vercel
+
+# Dependencies
+node_modules/
+
+# Environment files (these should be set in Vercel dashboard)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Local uploads (images should be on Cloudinary)
+uploads/
+public/images/
+
+# Build files
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scripts that are not needed in production
+scripts/
+seeders/
+check-optimization-status.sh
+deploy-to-vercel.sh
+
+# Documentation
+*.md
+!README.md
+
+# Config files not needed in serverless
+jsconfig.json
