@@ -276,21 +276,22 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Initialize database connection immediately for serverless
+// Mongoose will cache the connection across serverless invocations
+connectDB().catch(err => console.error('Initial database connection error:', err));
+
 // For Vercel serverless deployment, export the app
 // For traditional hosting, start the server
 if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
-  // Serverless mode - just connect to database
+  // Serverless mode - database connection is already initiated above
   console.log('Running in serverless mode');
-  connectDB()
-    .then(() => console.log('Database connected for serverless function'))
-    .catch(err => console.error('Database connection error:', err));
 } else {
   // Traditional server mode
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`API URL: http://localhost:${PORT}/api`);
     
-    // Connect to database after server starts
+    // Verify database connection and print sample data
     connectDB()
       .then(async (dbConnected) => {
         if (dbConnected) {
