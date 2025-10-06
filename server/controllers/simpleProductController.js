@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 
-// Simple getAllProducts that works
+// Simple getAllProducts that works - Optimized with lean() and pagination
 exports.getAllProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, search } = req.query;
+    const { page = 1, limit = 12, category, search } = req.query;
     const query = {};
     
-    // Temporarily disable category filtering
-    // if (category) {
-    //   query.category = { $regex: category, $options: 'i' };
-    // }
+    // Enable category filtering
+    if (category) {
+      query.category = { $regex: category, $options: 'i' };
+    }
     
     if (search) {
       query.$or = [
@@ -20,10 +20,14 @@ exports.getAllProducts = async (req, res) => {
     }
     
     const skip = (page - 1) * limit;
+    
+    // Use lean() for better performance (returns plain JS objects)
     const products = await Product.find(query)
+      .select('name description image images category subcategory isMostSelling isTopProduct features') // Only select needed fields
       .sort({ dateAdded: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean(); // Much faster than returning Mongoose documents
     
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
@@ -46,13 +50,15 @@ exports.filterProducts = async (req, res) => {
   return exports.getAllProducts(req, res);
 };
 
-// Get most selling products
+// Get most selling products - Optimized
 exports.getMostSellingProducts = async (req, res) => {
   try {
     const { limit = 6 } = req.query;
     const products = await Product.find({ isMostSelling: true })
+      .select('name description image images category subcategory features')
       .sort({ dateAdded: -1 })
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
     
     res.json({
       success: true,
@@ -65,13 +71,15 @@ exports.getMostSellingProducts = async (req, res) => {
   }
 };
 
-// Get top products
+// Get top products - Optimized
 exports.getTopProducts = async (req, res) => {
   try {
     const { limit = 6 } = req.query;
     const products = await Product.find({ isTopProduct: true })
+      .select('name description image images category subcategory features')
       .sort({ dateAdded: -1 })
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
     
     res.json({
       success: true,

@@ -6,9 +6,13 @@ const path = require('path');
 const runSeeders = require('./seeders');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 
 // Import Cloudinary configuration
 const { cloudinary, testConnection } = require('./utils/cloudinarySetup');
+
+// Import cache middleware
+const { cacheMiddleware, clearCache, getCacheStats } = require('./middleware/cacheMiddleware');
 
 // Create Express app
 const app = express();
@@ -49,6 +53,17 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// Add compression for all responses
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  level: 6 // Compression level (0-9, where 9 is maximum)
+}));
+
 // Configure CORS to allow requests from frontend
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
@@ -167,6 +182,19 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Cache management endpoints
+app.get('/api/cache/stats', getCacheStats);
+app.post('/api/cache/clear', clearCache, (req, res) => {
+  res.json({ success: true, message: 'Cache cleared successfully' });
+});
+
+// Apply caching to GET requests for public API routes
+// Cache products for 5 minutes
+app.use('/api/products', cacheMiddleware(300000));
+app.use('/api/categories', cacheMiddleware(300000));
+app.use('/api/about', cacheMiddleware(600000)); // 10 minutes for about page
+app.use('/api/gallery', cacheMiddleware(300000));
+
 // Define Routes - Use secure authentication system
 app.use('/api/auth', require('./routes/auth-secure-simple'));
 app.use('/api/users', require('./routes/users'));
@@ -237,39 +265,89 @@ const connectDB = async () => {
 // Define PORT - use 5000 to match frontend proxy
 const PORT = process.env.PORT || 5000;
 
-// Start server first, then connect to database
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`API URL: http://localhost:${PORT}/api`);
-  
-  // Connect to database after server starts
+// For Vercel serverless deployment, export the app
+// For traditional hosting, start the server
+if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
+  // Serverless mode - just connect to database
+  console.log('Running in serverless mode');
   connectDB()
-    .then(async (dbConnected) => {
-      if (dbConnected) {
-        console.log('API running with database connection');
-        
-        // Print sample product to verify data
-        const Product = require('./models/Product');
-        const sampleProducts = await Product.find().limit(1);
-        if (sampleProducts.length > 0) {
-          console.log('Sample product:', sampleProducts[0].name);
+    .then(() => console.log('Database connected for serverless function'))
+    .catch(err => console.error('Database connection error:', err));
+  
+  // Export app for Vercel
+  module.exports = app;
+} else {
+  // Traditional server mode
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`API URL: http://localhost:${PORT}/api`);
+    
+    // Connect to database after server starts
+    connectDB()
+      .then(async (dbConnected) => {
+        if (dbConnected) {
+          console.log('API running with database connection');
+          
+          // Print sample product to verify data
+          const Product = require('./models/Product');
+          const sampleProducts = await Product.find().limit(1);
+          if (sampleProducts.length > 0) {
+            console.log('Sample product:', sampleProducts[0].name);
+          } else {
+            console.log('No products found in database');
+          }
         } else {
-          console.log('No products found in database');
+          console.log('API running without database connection');
         }
-      } else {
+      })
+      .catch(error => {
+        console.error('Database connection failed:', error);
         console.log('API running without database connection');
-      }
-    })
-    .catch(error => {
-      console.error('Database connection failed:', error);
-      console.log('API running without database connection');
-    });
-});
+      });
+  });
 
-// Configure server timeouts to handle slow requests better
-server.timeout = 60000; // 60 seconds
-server.keepAliveTimeout = 65000; // 65 seconds (should be > timeout)
-server.headersTimeout = 66000; // 66 seconds (should be > keepAliveTimeout)
+  // Configure server timeouts to handle slow requests better
+  server.timeout = 60000; // 60 seconds
+  server.keepAliveTimeout = 65000; // 65 seconds (should be > timeout)
+  server.headersTimeout = 66000; // 66 seconds (should be > keepAliveTimeout)
+  
+  // Handle server shutdown
+  process.on('SIGINT', async () => {
+    console.log('Shutting down server gracefully...');
+    
+    server.close(async () => {
+      console.log('HTTP server closed');
+      
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed');
+      }
+      
+      process.exit(0);
+    });
+    
+    // Force close after 10 seconds
+    setTimeout(() => {
+      console.log('Forcing server shutdown...');
+      process.exit(1);
+    }, 10000);
+  });
+
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, shutting down gracefully...');
+    
+    server.close(async () => {
+      console.log('HTTP server closed');
+      
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed');
+      }
+      
+      process.exit(0);
+    });
+  });
+}
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
@@ -279,42 +357,5 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     message: err.message || 'Something went wrong on the server',
     error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
-
-// Handle server shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down server gracefully...');
-  
-  server.close(async () => {
-    console.log('HTTP server closed');
-    
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
-      console.log('MongoDB connection closed');
-    }
-    
-    process.exit(0);
-  });
-  
-  // Force close after 10 seconds
-  setTimeout(() => {
-    console.log('Forcing server shutdown...');
-    process.exit(1);
-  }, 10000);
-});
-
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  
-  server.close(async () => {
-    console.log('HTTP server closed');
-    
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
-      console.log('MongoDB connection closed');
-    }
-    
-    process.exit(0);
   });
 });
