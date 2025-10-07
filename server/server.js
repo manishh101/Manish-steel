@@ -30,27 +30,13 @@ testConnection()
     console.error('Error verifying Cloudinary configuration:', err.message);
   });
 
-// Use Morgan for request logging
-app.use(morgan(':method :url :status :response-time ms - :res[content-length]'));
-
-// Add detailed request logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  console.log('Headers:', req.headers);
-  if (req.method === 'POST' || req.method === 'PUT') {
-    console.log('Body:', req.body);
-  }
-  
-  // Capture and log the response
-  const originalSend = res.send;
-  res.send = function(body) {
-    console.log(`[${new Date().toISOString()}] Response for ${req.method} ${req.originalUrl}:`, 
-      typeof body === 'string' ? body.substring(0, 200) + '...' : '[Object]');
-    return originalSend.call(this, body);
-  };
-  
-  next();
-});
+// Optimized logging for serverless (reduced verbosity)
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('combined'));
+} else {
+  // Minimal logging in production for better performance
+  app.use(morgan('tiny'));
+}
 
 // Middleware
 // Add compression for all responses
@@ -103,36 +89,20 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' })); // Increase JSON payload limit
 
-// Enhanced global rate limiting - more lenient for API endpoints
+// Simplified rate limiting for serverless (less effective but faster cold starts)
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Very generous limit for general API usage
-  message: {
-    error: 'Too many requests, please try again later',
-    retryAfter: 15 * 60 * 1000
-  },
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 100, // Reasonable limit per window
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    // Skip rate limiting for health checks, static files, and OPTIONS requests
-    return req.method === 'OPTIONS' || 
-           req.path.includes('/health') || 
-           req.path.includes('/uploads') || 
-           req.path.includes('/public') ||
-           req.path === '/' ||
-           req.path === '/api';
-  },
-  handler: (req, res) => {
-    console.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
-    res.status(429).json({
-      error: 'Too many requests, please try again later',
-      retryAfter: 15 * 60 * 1000
-    });
+    // Skip rate limiting for health checks and OPTIONS requests
+    return req.method === 'OPTIONS' || req.path.includes('/health');
   }
 });
 
-// Apply rate limiting to API routes only
-app.use('/api', apiLimiter);
+// Apply lighter rate limiting to sensitive endpoints only
+app.use('/api/auth', apiLimiter);
 
 // Serve static files from uploads directory for legacy image support
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -262,10 +232,7 @@ const connectDB = async () => {
   }
 };
 
-// Define PORT - use 5000 to match frontend proxy
-const PORT = process.env.PORT || 5000;
-
-// Enhanced error handling middleware (must be before export)
+// Enhanced error handling middleware (must be at the end)
 app.use((err, req, res, next) => {
   console.error('⚠️ Server Error:', err);
   console.error('Stack trace:', err.stack);
@@ -276,87 +243,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Initialize database connection immediately for serverless
-// Mongoose will cache the connection across serverless invocations
-connectDB().catch(err => console.error('Initial database connection error:', err));
-
-// For Vercel serverless deployment, export the app
-// For traditional hosting, start the server
-if (process.env.VERCEL || process.env.NODE_ENV === 'serverless') {
-  // Serverless mode - database connection is already initiated above
-  console.log('Running in serverless mode');
-} else {
-  // Traditional server mode
-  const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`API URL: http://localhost:${PORT}/api`);
-    
-    // Verify database connection and print sample data
-    connectDB()
-      .then(async (dbConnected) => {
-        if (dbConnected) {
-          console.log('API running with database connection');
-          
-          // Print sample product to verify data
-          const Product = require('./models/Product');
-          const sampleProducts = await Product.find().limit(1);
-          if (sampleProducts.length > 0) {
-            console.log('Sample product:', sampleProducts[0].name);
-          } else {
-            console.log('No products found in database');
-          }
-        } else {
-          console.log('API running without database connection');
-        }
-      })
-      .catch(error => {
-        console.error('Database connection failed:', error);
-        console.log('API running without database connection');
-      });
-  });
-
-  // Configure server timeouts to handle slow requests better
-  server.timeout = 60000; // 60 seconds
-  server.keepAliveTimeout = 65000; // 65 seconds (should be > timeout)
-  server.headersTimeout = 66000; // 66 seconds (should be > keepAliveTimeout)
-  
-  // Handle server shutdown
-  process.on('SIGINT', async () => {
-    console.log('Shutting down server gracefully...');
-    
-    server.close(async () => {
-      console.log('HTTP server closed');
-      
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed');
-      }
-      
-      process.exit(0);
-    });
-    
-    // Force close after 10 seconds
-    setTimeout(() => {
-      console.log('Forcing server shutdown...');
-      process.exit(1);
-    }, 10000);
-  });
-
-  process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, shutting down gracefully...');
-    
-    server.close(async () => {
-      console.log('HTTP server closed');
-      
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed');
-      }
-      
-      process.exit(0);
-    });
-  });
-}
-
-// Always export the app for serverless environments (Vercel)
+// Export the Express app for serverless deployment
+// Database connection is handled in the root index.js
 module.exports = app;
