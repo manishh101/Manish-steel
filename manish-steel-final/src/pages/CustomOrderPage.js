@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import api from '../services/api';
 
 const CustomOrderPage = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -29,72 +30,38 @@ const CustomOrderPage = () => {
       if (data.color) formattedData.color = data.color;
       if (data.budget) formattedData.budget = data.budget;
       
-      const response = await fetch('/api/custom-orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(formattedData),
-      });
+      const response = await api.post('/custom-orders', formattedData);
       
-      if (response.ok) {
-        let responseBodyText = null;
-        try {
-          const contentType = response.headers.get('content-type');
-          console.log('Response Content-Type:', contentType);
-          responseBodyText = await response.text();
-          console.log('Response Body Text:', responseBodyText);
-
-          if (contentType && contentType.includes('application/json')) {
-            const result = JSON.parse(responseBodyText);
-            console.log('Parsed JSON Result:', result);
-
-            setIsSubmitted(true);
-            reset();
-            
-            let timeLeft = 3;
-            setCountdown(timeLeft);
-            const countdownTimer = setInterval(() => {
-              timeLeft--;
-              setCountdown(prevCountdown => prevCountdown - 1);
-              if (timeLeft <= 0) {
-                clearInterval(countdownTimer);
-                window.location.reload();
-              }
-            }, 1000);
-          } else {
-            console.error('Response Content-Type is not application/json. Received:', contentType);
-            console.error('Response Body (if any):', responseBodyText);
-            setErrorMessage('Received an unexpected response format from the server. Please contact support.');
+      if (response.data) {
+        console.log('Custom order submitted successfully:', response.data);
+        setIsSubmitted(true);
+        reset();
+        
+        let timeLeft = 3;
+        setCountdown(timeLeft);
+        const countdownTimer = setInterval(() => {
+          timeLeft--;
+          setCountdown(prevCountdown => prevCountdown - 1);
+          if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            window.location.reload();
           }
-        } catch (processSuccessResponseError) {
-          console.error('Error processing successful response:', processSuccessResponseError);
-          if (responseBodyText !== null) {
-            console.error('Response body received (during error processing successful response):', responseBodyText);
-          }
-          setErrorMessage('Error processing server response. Please contact support.');
-        }
-      } else {
-        let errorResponseBodyText = null;
-        try {
-          errorResponseBodyText = await response.text();
-          const errorData = JSON.parse(errorResponseBodyText);
-          setErrorMessage(errorData.message || 'Failed to submit your request. Please try again.');
-        } catch (parseErrorResponseError) {
-          console.error('Failed to parse error response as JSON:', parseErrorResponseError);
-          if (errorResponseBodyText !== null) {
-            console.error('Error response body received:', errorResponseBodyText);
-          } else {
-            console.error('Could not read error response body.');
-          }
-          setErrorMessage('Server returned an error with an unexpected format. Please try again.');
-        }
+        }, 1000);
       }
-    } catch (networkOrFetchError) {
-      console.error('Network or fetch error:', networkOrFetchError);
-      setErrorMessage(`Failed to submit your request: ${networkOrFetchError.message}. Please check your connection and try again.`);
+    } catch (error) {
+      console.error('Error submitting custom order:', error);
+      
+      if (error.response) {
+        // Server responded with error
+        const errorMsg = error.response.data?.message || 'Failed to submit order. Please try again.';
+        setErrorMessage(errorMsg);
+      } else if (error.request) {
+        // Request made but no response
+        setErrorMessage('Unable to connect to server. Please check your connection and try again.');
+      } else {
+        // Error setting up request
+        setErrorMessage('An error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

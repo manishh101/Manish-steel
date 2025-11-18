@@ -357,18 +357,28 @@ const HomePage = () => {
       {/* Instant Category Display Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-primary text-center mb-3 animate-fadeIn">
+          <h2 className="text-3xl font-bold text-primary text-center mb-8 animate-fadeIn">
             Browse Our Collections
           </h2>
-          <p className="text-gray-600 text-center mb-12 animate-fadeIn max-w-2xl mx-auto" style={{animationDelay: '0.2s'}}>
-            Quality furniture for homes and offices. Modern designs at affordable prices.
-          </p>
+          
+          {/* Mobile Scroll Indicator */}
+          <div className="md:hidden text-center mb-4">
+            <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+              </svg>
+              Swipe to see more
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </p>
+          </div>
           
           {/* Display loading state or categories */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="flex md:grid overflow-x-auto md:overflow-x-visible gap-8 md:grid-cols-2 lg:grid-cols-3 snap-x snap-mandatory md:snap-none pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
               {[1, 2, 3].map((index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden flex-shrink-0 w-[85vw] md:w-auto snap-center">
                   <div className="aspect-[4/3] bg-gray-200 animate-pulse"></div>
                   <div className="p-6">
                     <div className="bg-gray-200 h-6 rounded mb-2 animate-pulse"></div>
@@ -379,12 +389,12 @@ const HomePage = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="flex md:grid overflow-x-auto md:overflow-x-visible gap-8 md:grid-cols-2 lg:grid-cols-3 snap-x snap-mandatory md:snap-none pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
               {categories && categories.length > 0 ? (
                 categories.map((category, index) => (
                   <div 
                     key={category._id || category.id} 
-                    className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group"
+                    className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group flex-shrink-0 w-[85vw] md:w-auto snap-center"
                     style={{animationDelay: `${0.1 + (index * 0.1)}s`}}
                   >
                     <div className="relative w-full aspect-[4/3] overflow-hidden">
@@ -431,7 +441,7 @@ const HomePage = () => {
               ) : (
                 // Fallback categories for instant display
                 <>
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.1s'}}>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group flex-shrink-0 w-[85vw] md:w-auto snap-center" style={{animationDelay: '0.1s'}}>
                     <div className="relative w-full aspect-[4/3] overflow-hidden">
                       {/* This will be called when fallback categories are shown */}
                       <OptimizedImage
@@ -466,7 +476,7 @@ const HomePage = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.2s'}}>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group flex-shrink-0 w-[85vw] md:w-auto snap-center" style={{animationDelay: '0.2s'}}>
                     <div className="relative w-full aspect-[4/3] overflow-hidden">
                       <OptimizedImage 
                         src={categoryThumbnails['684c14969550362979fd95a3'] || '/placeholders/Office-Products.png'} 
@@ -500,7 +510,7 @@ const HomePage = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group" style={{animationDelay: '0.3s'}}>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl animate-fadeInUp group flex-shrink-0 w-[85vw] md:w-auto snap-center" style={{animationDelay: '0.3s'}}>
                     <div className="relative w-full aspect-[4/3] overflow-hidden">
                       <OptimizedImage 
                         src={categoryThumbnails['684c14969550362979fd95a4'] || '/placeholders/Commercial-Shelving.png'} 

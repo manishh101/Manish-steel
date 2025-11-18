@@ -125,7 +125,7 @@ const BottomNavigation = ({ toggleCategories, toggleMenu }) => {
           aria-label={location.pathname === '/' ? 'Scroll to top' : 'Go to Home'}
           title={location.pathname === '/' ? 'Scroll to top' : 'Go to Home'}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill={isActive === 'home' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive === 'home' ? 0 : 1.5}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span className="text-xs font-normal">Home</span>
@@ -141,7 +141,7 @@ const BottomNavigation = ({ toggleCategories, toggleMenu }) => {
           aria-label={location.pathname === '/products' ? 'Scroll to top' : 'Go to Shop'}
           title={location.pathname === '/products' ? 'Scroll to top' : 'Go to Shop'}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill={isActive === 'shop' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive === 'shop' ? 0 : 1.5}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
           <span className="text-xs font-normal">Shop</span>
@@ -158,7 +158,7 @@ const BottomNavigation = ({ toggleCategories, toggleMenu }) => {
           title={isCategoriesOpen ? 'Close Categories Filter' : 'Open Categories Filter'}
           type="button"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill={isCategoriesOpen ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isCategoriesOpen ? 0 : 1.5}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
           <span className="text-xs font-normal">Categories</span>

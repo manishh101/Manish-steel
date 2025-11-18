@@ -136,11 +136,11 @@ const CleanTopProductsSection = () => {
         {/* Section Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <FaStar className="text-3xl text-yellow-500 mr-3" />
-            <h2 className="text-4xl font-bold text-primary">Our Top Products</h2>
+            <FaStar className="text-2xl text-yellow-500 mr-2" />
+            <h2 className="text-3xl font-bold text-primary">Our Top Products</h2>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Handpicked premium steel furniture that represents the best of our craftsmanship and design excellence.
+          <p className="text-base text-gray-500 max-w-2xl mx-auto">
+            Premium furniture showcasing our best craftsmanship.
           </p>
         </div>
 
