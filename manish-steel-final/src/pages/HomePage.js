@@ -291,7 +291,7 @@ const HomePage = () => {
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
           <ScrollAnimator animation="fadeUp">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Us?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Why Choose Us?</h2>
           </ScrollAnimator>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
@@ -357,7 +357,7 @@ const HomePage = () => {
       {/* Instant Category Display Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-primary text-center mb-8 animate-fadeIn">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary text-center mb-8 animate-fadeIn">
             Browse Our Collections
           </h2>
           
@@ -573,8 +573,8 @@ const HomePage = () => {
       {/* Call to Action */}
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 animate-fadeIn">Ready to Transform Your Space?</h2>
-          <p className="text-lg md:text-xl mb-8 animate-fadeIn" style={{animationDelay: '0.2s'}}>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 animate-fadeIn">Ready to Transform Your Space?</h2>
+          <p className="text-base md:text-lg lg:text-xl mb-8 animate-fadeIn" style={{animationDelay: '0.2s'}}>
             Contact us today to discuss your furniture needs or visit our showroom to see our products in person.
           </p>
           <div className="flex flex-wrap justify-center gap-4 animate-fadeIn" style={{animationDelay: '0.4s'}}>
@@ -600,8 +600,8 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-primary mb-4">Our Services</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary mb-4">Our Services</h2>
+            <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
               Comprehensive furniture solutions tailored to your needs
             </p>
           </div>
@@ -626,11 +626,11 @@ const HomePage = () => {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-primary mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">
               Nepal's Leading Steel Furniture Manufacturer
             </h2>
             
-            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
               Trusted by thousands of customers across Nepal for premium quality steel furniture 
               at affordable prices.
             </p>
@@ -668,8 +668,8 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-primary mb-4">Visit Our Showroom</h2>
-            <p className="text-lg text-gray-600 max-w-xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">Visit Our Showroom</h2>
+            <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
               Experience our furniture collection in person at our Biratnagar showroom.
             </p>
           </div>
@@ -773,8 +773,8 @@ const HomePage = () => {
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-primary text-center mb-3 animate-fadeIn">What Our Customers Say</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Discover why our customers trust us with their furniture needs. Here's what they have to say about their experience with Shree Manish Steel.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary text-center mb-3 animate-fadeIn">What Our Customers Say</h2>
+            <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">Discover why our customers trust us with their furniture needs. Here's what they have to say about their experience with Shree Manish Steel.</p>
           </div>
           
           {/* Testimonial Cards with Navigation */}

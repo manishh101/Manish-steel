@@ -731,6 +731,56 @@ exports.updateTopProductStatus = async (req, res) => {
 };
 
 /**
+ * Update product category thumbnail status
+ * @route PATCH /api/products/:id/category-thumbnail
+ */
+exports.updateCategoryThumbnailStatus = async (req, res) => {
+  try {
+    const { usedAsCategoryThumbnail } = req.body;
+    
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+
+    // If setting this product as category thumbnail, unset any other product in the same category
+    if (usedAsCategoryThumbnail && product.categoryId) {
+      await Product.updateMany(
+        { 
+          categoryId: product.categoryId,
+          _id: { $ne: product._id }
+        },
+        { usedAsCategoryThumbnail: false }
+      );
+    }
+
+    // Update the current product
+    product.usedAsCategoryThumbnail = Boolean(usedAsCategoryThumbnail);
+    await product.save();
+    
+    await product.populate('categoryId', 'name');
+    await product.populate('subcategoryId', 'name');
+    
+    res.json({
+      success: true,
+      msg: `Product ${usedAsCategoryThumbnail ? 'set as category thumbnail' : 'removed as category thumbnail'} successfully`,
+      product: formatProduct(product)
+    });
+  } catch (err) {
+    console.error('Update category thumbnail status error:', err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server Error',
+      error: err.message 
+    });
+  }
+};
+
+/**
  * Update product sales count
  * @route PATCH /api/products/:id/sales
  */

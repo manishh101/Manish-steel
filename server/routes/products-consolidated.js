@@ -124,6 +124,13 @@ router.patch('/:id/most-selling', auth, productController.updateMostSellingStatu
 router.patch('/:id/top-product', auth, productController.updateTopProductStatus);
 
 /**
+ * @route   PATCH api/products/:id/category-thumbnail
+ * @desc    Update product category thumbnail status
+ * @access  Private
+ */
+router.patch('/:id/category-thumbnail', auth, productController.updateCategoryThumbnailStatus);
+
+/**
  * @route   PATCH api/products/:id/sales
  * @desc    Update product sales count
  * @access  Private

@@ -674,6 +674,20 @@ export const productAPI = {
       // Simulate successful response for demo
       return { data: { success: true, msg: 'Top product status updated (demo mode)' } };
     }
+  },
+
+  // Update category thumbnail status
+  updateCategoryThumbnailStatus: async (id, usedAsCategoryThumbnail) => {
+    try {
+      if (!isApiConnected) {
+        throw new Error('API not connected');
+      }
+      return await api.patch(`/products/${id}/category-thumbnail`, { usedAsCategoryThumbnail });
+    } catch (error) {
+      console.warn('Category thumbnail status update fallback:', error.message);
+      // Simulate successful response for demo
+      return { data: { success: true, msg: 'Category thumbnail status updated (demo mode)' } };
+    }
   }
 };
 
@@ -1081,6 +1095,43 @@ const checkApiConnection = async (retryCount = 3) => {
     return false;
   } finally {
     connectionCheckInProgress = false;
+  }
+};
+
+// Custom Order API methods
+export const customOrderAPI = {
+  // Get all custom orders with pagination and filtering
+  getAll: async (page = 1, status = 'all') => {
+    let url = `/custom-orders?page=${page}`;
+    if (status !== 'all') {
+      url += `&status=${status}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Get a specific custom order by ID
+  getById: async (orderId) => {
+    const response = await api.get(`/custom-orders/${orderId}`);
+    return response.data;
+  },
+
+  // Create a new custom order
+  create: async (orderData) => {
+    const response = await api.post('/custom-orders', orderData);
+    return response.data;
+  },
+
+  // Update custom order status (admin only)
+  updateStatus: async (orderId, status) => {
+    const response = await api.put(`/custom-orders/${orderId}`, { status });
+    return response.data;
+  },
+
+  // Delete a custom order (admin only)
+  delete: async (orderId) => {
+    const response = await api.delete(`/custom-orders/${orderId}`);
+    return response.data;
   }
 };
 

@@ -36,7 +36,7 @@ class CategoryImageService {
       } catch (cacheError) {
         // If cache fails, fetch from API directly
         console.log(`Cache miss for category ${categoryName}, fetching from API`);
-        const response = await productAPI.getByCategory(categoryId, { limit: 4 });
+        const response = await productAPI.getByCategory(categoryId, { limit: 10 });
         products = response.data.products || response.data || [];
       }
       
@@ -44,30 +44,45 @@ class CategoryImageService {
       let thumbnailUrl = null;
       
       if (products && products.length > 0) {
-        // First, try to find a product with a Cloudinary image
-        const productWithCloudinaryImage = products.find(product => 
-          product.image && ImageService.isCloudinaryUrl(product.image)
+        // First priority: Check if any product is marked as category thumbnail
+        const categoryThumbnailProduct = products.find(product => 
+          product.usedAsCategoryThumbnail === true
         );
         
-        if (productWithCloudinaryImage) {
-          thumbnailUrl = ImageService.getOptimizedImageUrl(productWithCloudinaryImage.image, {
+        if (categoryThumbnailProduct) {
+          console.log(`Found designated category thumbnail for ${categoryName}`);
+          thumbnailUrl = ImageService.getOptimizedImageUrl(categoryThumbnailProduct.image, {
             width: 400,
             height: 500,
             category: categoryName
           });
-        } 
-        // If no product has a Cloudinary main image, check additional images
+        }
+        // Second priority: Try to find a product with a Cloudinary image
         else {
-          const productWithAdditionalImages = products.find(product => 
-            product.images && product.images.length > 0
+          const productWithCloudinaryImage = products.find(product => 
+            product.image && ImageService.isCloudinaryUrl(product.image)
           );
           
-          if (productWithAdditionalImages && productWithAdditionalImages.images[0]) {
-            thumbnailUrl = ImageService.getOptimizedImageUrl(productWithAdditionalImages.images[0], {
+          if (productWithCloudinaryImage) {
+            thumbnailUrl = ImageService.getOptimizedImageUrl(productWithCloudinaryImage.image, {
               width: 400,
               height: 500,
               category: categoryName
             });
+          } 
+          // If no product has a Cloudinary main image, check additional images
+          else {
+            const productWithAdditionalImages = products.find(product => 
+              product.images && product.images.length > 0
+            );
+            
+            if (productWithAdditionalImages && productWithAdditionalImages.images[0]) {
+              thumbnailUrl = ImageService.getOptimizedImageUrl(productWithAdditionalImages.images[0], {
+                width: 400,
+                height: 500,
+                category: categoryName
+              });
+            }
           }
         }
       }

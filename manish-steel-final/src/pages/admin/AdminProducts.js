@@ -167,6 +167,30 @@ const AdminProducts = () => {
     }
   };
 
+  const handleCategoryThumbnailToggle = async (productId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      await productAPI.updateCategoryThumbnailStatus(productId, newStatus);
+      console.log(`Updated category thumbnail status for product ${productId} to ${newStatus}`);
+      
+      // If setting a product as category thumbnail, unset all others in the same category
+      setProducts(prev => prev.map(product => {
+        if (product._id === productId) {
+          return { ...product, usedAsCategoryThumbnail: newStatus };
+        } else if (newStatus && product.categoryId === prev.find(p => p._id === productId)?.categoryId) {
+          return { ...product, usedAsCategoryThumbnail: false };
+        }
+        return product;
+      }));
+      
+      // Reload products to ensure consistency
+      await loadProducts();
+    } catch (err) {
+      console.error('Error updating category thumbnail status:', err);
+      setError(`Failed to update category thumbnail status: ${err.message}`);
+    }
+  };
+
   const getCategoryDisplay = (product) => {
     let display = product.category || 'Uncategorized';
     if (product.subcategory) {
@@ -269,6 +293,23 @@ const AdminProducts = () => {
                     <p className="text-sm text-gray-500 mb-1">
                       {getCategoryDisplay(product)}
                     </p>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {product.isMostSelling && (
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          Most Selling
+                        </span>
+                      )}
+                      {product.isTopProduct && (
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                          Top Product
+                        </span>
+                      )}
+                      {product.usedAsCategoryThumbnail && (
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Category Image
+                        </span>
+                      )}
+                    </div>
                     <div className="flex space-x-3 mt-2">
                       <button 
                         onClick={() => openEditModal(product)} 
@@ -281,6 +322,19 @@ const AdminProducts = () => {
                         className="bg-red-50 text-red-600 p-2 rounded-md hover:bg-red-100"
                       >
                         <TrashIcon className="h-5 w-5" />
+                      </button>
+                      <button 
+                        onClick={() => handleCategoryThumbnailToggle(product._id, product.usedAsCategoryThumbnail)} 
+                        className={`p-2 rounded-md ${
+                          product.usedAsCategoryThumbnail 
+                            ? 'bg-green-50 text-green-600 hover:bg-green-100' 
+                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title={product.usedAsCategoryThumbnail ? 'Remove as Category Image' : 'Use as Category Image'}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -361,6 +415,17 @@ const AdminProducts = () => {
                           title={product.isTopProduct ? 'Remove from Top Products' : 'Add to Top Products'}
                         >
                           {product.isTopProduct ? '✓ Top Product' : 'Top Product'}
+                        </button>
+                        <button
+                          onClick={() => handleCategoryThumbnailToggle(product._id, product.usedAsCategoryThumbnail)}
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
+                            product.usedAsCategoryThumbnail
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title={product.usedAsCategoryThumbnail ? 'Remove as Category Image' : 'Use as Category Image'}
+                        >
+                          {product.usedAsCategoryThumbnail ? '✓ Category Image' : 'Category Image'}
                         </button>
                       </div>
                     </td>

@@ -77,6 +77,10 @@ const ProductSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  usedAsCategoryThumbnail: {
+    type: Boolean,
+    default: false
+  },
   
   dimensions: {
     length: Number,
@@ -128,6 +132,7 @@ ProductSchema.index({ salesCount: -1 }); // For sorting by sales count
 ProductSchema.index({ rating: -1 }); // For sorting by rating
 ProductSchema.index({ isMostSelling: 1 }); // For filtering most selling products
 ProductSchema.index({ isTopProduct: 1 }); // For filtering top products
+ProductSchema.index({ usedAsCategoryThumbnail: 1, categoryId: 1 }); // For category thumbnails
 
 // Pre-save hook to ensure category and subcategory string fields are populated
 ProductSchema.pre('save', async function(next) {

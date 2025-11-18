@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrashAlt, FaEye, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { customOrderAPI } from '../../services/api';
 
 const AdminCustomOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -31,20 +32,7 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
 
     try {
-      let url = `/api/custom-orders?page=${currentPage}`;
-      
-      // Add status filter if not 'all'
-      if (statusFilter !== 'all') {
-        url += `&status=${statusFilter}`;
-      }
-
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch orders: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await customOrderAPI.getAll(currentPage, statusFilter);
       setOrders(data.orders || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (err) {
@@ -61,17 +49,7 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
     
     try {
-      const response = await fetch(`/api/custom-orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update order: ${response.status}`);
-      }
+      await customOrderAPI.updateStatus(orderId, newStatus);
 
       // Update local state
       setOrders(orders.map(order => 
@@ -100,13 +78,7 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
 
     try {
-      const response = await fetch(`/api/custom-orders/${orderId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete order: ${response.status}`);
-      }
+      await customOrderAPI.delete(orderId);
 
       // Remove from local state
       setOrders(orders.filter(order => order._id !== orderId));
