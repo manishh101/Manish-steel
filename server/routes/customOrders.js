@@ -63,7 +63,91 @@ router.post('/', async (req, res) => {
     // Save to database
     const savedOrder = await customOrder.save();
 
-    // Send response immediately to user
+    // Send email notification if Resend is configured
+    if (resend && process.env.RECIPIENT_EMAIL && process.env.FROM_EMAIL) {
+      try {
+        const dimensionsText = [width, height, depth].filter(Boolean).join(' x ') || 'Not specified';
+        
+        await resend.emails.send({
+          from: process.env.FROM_EMAIL,
+          to: [process.env.RECIPIENT_EMAIL],
+          subject: `New Custom Order Request #${savedOrder._id.toString().slice(-6)} from ${name}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 10px;">
+                New Custom Order Request
+              </h1>
+              
+              <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h2 style="color: #2c5aa0; margin-top: 0;">Order ID: #${savedOrder._id.toString().slice(-6)}</h2>
+                <p><strong>Status:</strong> <span style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px;">New</span></p>
+                <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+
+              <h3 style="color: #2c5aa0;">Customer Information</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Name:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${name}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Email:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${email}</td>
+                </tr>
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Phone:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${phone}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Address:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${address}</td>
+                </tr>
+              </table>
+
+              <h3 style="color: #2c5aa0;">Product Details</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Product Type:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${productType.charAt(0).toUpperCase() + productType.slice(1)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Dimensions:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${dimensionsText}</td>
+                </tr>
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Preferred Color:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${color || 'Not specified'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Budget Range:</td>
+                  <td style="padding: 10px; border: 1px solid #dee2e6;">${budget || 'Not specified'}</td>
+                </tr>
+              </table>
+
+              <h3 style="color: #2c5aa0;">Special Requirements</h3>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #2c5aa0;">
+                <p style="margin: 0; white-space: pre-wrap;">${requirements}</p>
+              </div>
+
+              <div style="margin-top: 30px; padding: 20px; background-color: #e7f3ff; border-radius: 8px;">
+                <h3 style="color: #2c5aa0; margin-top: 0;">Next Steps</h3>
+                <ul>
+                  <li>Review the customer requirements carefully</li>
+                  <li>Contact the customer within 24 hours</li>
+                  <li>Provide a detailed quote if applicable</li>
+                  <li>Update the order status in the admin panel</li>
+                </ul>
+              </div>
+            </div>
+          `,
+          reply_to: email
+        });
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
     res.status(201).json({
       message: 'Custom order request submitted successfully!',
       orderId: savedOrder._id.toString().slice(-6),
@@ -73,90 +157,6 @@ router.post('/', async (req, res) => {
         createdAt: savedOrder.createdAt
       }
     });
-
-    // Send email notification asynchronously (non-blocking)
-    if (resend && process.env.RECIPIENT_EMAIL && process.env.FROM_EMAIL) {
-      const dimensionsText = [width, height, depth].filter(Boolean).join(' x ') || 'Not specified';
-      
-      // Send email in the background without blocking the response
-      resend.emails.send({
-        from: process.env.FROM_EMAIL,
-        to: [process.env.RECIPIENT_EMAIL],
-        subject: `New Custom Order Request #${savedOrder._id.toString().slice(-6)} from ${name}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 10px;">
-              New Custom Order Request
-            </h1>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #2c5aa0; margin-top: 0;">Order ID: #${savedOrder._id.toString().slice(-6)}</h2>
-              <p><strong>Status:</strong> <span style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px;">New</span></p>
-              <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-            </div>
-
-            <h3 style="color: #2c5aa0;">Customer Information</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-              <tr style="background-color: #f8f9fa;">
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Name:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${name}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Email:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${email}</td>
-              </tr>
-              <tr style="background-color: #f8f9fa;">
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Phone:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${phone}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Address:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${address}</td>
-              </tr>
-            </table>
-
-            <h3 style="color: #2c5aa0;">Product Details</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-              <tr style="background-color: #f8f9fa;">
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Product Type:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${productType.charAt(0).toUpperCase() + productType.slice(1)}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Dimensions:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${dimensionsText}</td>
-              </tr>
-              <tr style="background-color: #f8f9fa;">
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Preferred Color:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${color || 'Not specified'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: bold;">Budget Range:</td>
-                <td style="padding: 10px; border: 1px solid #dee2e6;">${budget || 'Not specified'}</td>
-              </tr>
-            </table>
-
-            <h3 style="color: #2c5aa0;">Special Requirements</h3>
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #2c5aa0;">
-              <p style="margin: 0; white-space: pre-wrap;">${requirements}</p>
-            </div>
-
-            <div style="margin-top: 30px; padding: 20px; background-color: #e7f3ff; border-radius: 8px;">
-              <h3 style="color: #2c5aa0; margin-top: 0;">Next Steps</h3>
-              <ul>
-                <li>Review the customer requirements carefully</li>
-                <li>Contact the customer within 24 hours</li>
-                <li>Provide a detailed quote if applicable</li>
-                <li>Update the order status in the admin panel</li>
-              </ul>
-            </div>
-          </div>
-        `,
-        reply_to: email
-      }).catch(emailError => {
-        console.error('Error sending email notification:', emailError);
-        // Email failure doesn't affect the user's success
-      });
-    }
 
   } catch (error) {
     console.error('Error creating custom order:', error);

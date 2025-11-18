@@ -240,18 +240,18 @@ const HomePage = () => {
               </p>
               */}
               
-              <div className="flex flex-wrap gap-4 mt-8 animate-slideInLeft" style={{animationDelay: '0.3s'}}>
+              <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8 animate-slideInLeft" style={{animationDelay: '0.3s'}}>
                 <Link 
                   to="/products" 
-                  className="bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg"
-                  style={{minWidth: '150px', textAlign: 'center'}}
+                  className="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+                  style={{minWidth: '130px', textAlign: 'center'}}
                 >
                   View Products
                 </Link>
                 <Link 
                   to="/contact" 
-                  className="bg-white text-primary font-semibold px-8 py-3 rounded-lg border-2 border-primary hover:bg-primary/5 transition-all duration-300 shadow-sm"
-                  style={{minWidth: '150px', textAlign: 'center'}}
+                  className="bg-white text-primary font-semibold px-6 py-2.5 rounded-lg border-2 border-primary hover:bg-primary/5 transition-all duration-300 shadow-sm text-sm"
+                  style={{minWidth: '130px', textAlign: 'center'}}
                 >
                   Contact Us
                 </Link>
@@ -379,135 +379,7 @@ const HomePage = () => {
               ))}
             </div>
           ) : (
-            <>
-              {/* Mobile: Horizontal Scroll Carousel */}
-              <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div className="flex gap-6 pb-4" style={{ scrollSnapType: 'x mandatory' }}>
-                  {categories && categories.length > 0 ? (
-                    categories.map((category, index) => (
-                      <div 
-                        key={category._id || category.id} 
-                        className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]"
-                        style={{ scrollSnapAlign: 'center' }}
-                      >
-                        <div className="relative w-full aspect-[4/3] overflow-hidden">
-                          {categoryThumbnails[category._id || category.id] ? (
-                            <OptimizedImage 
-                              src={categoryThumbnails[category._id || category.id]}
-                              alt={`${category.name} Products`} 
-                              category={category.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center text-gray-400">
-                              Loading products...
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-2xl font-bold text-primary mb-2">{category.name}</h3>
-                          <p className="text-text/80 mb-4 line-clamp-2">
-                            {category.description || `Quality ${category.name.toLowerCase()} made with precision and care for your needs.`}
-                          </p>
-                          <button 
-                            onClick={() => handleCategoryClick(category._id || category.id, category.name)}
-                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
-                          >
-                            View Collection
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    // Fallback categories for mobile
-                    <>
-                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
-                        <div className="relative w-full aspect-[4/3] overflow-hidden">
-                          <OptimizedImage
-                            src={categoryThumbnails['684c14969550362979fd95a2'] || '/placeholders/Household-Furniture.png'}
-                            alt="Household Furniture"
-                            category="Household Furniture"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-2xl font-bold text-primary mb-2">Household Furniture</h3>
-                          <p className="text-text/80 mb-4 line-clamp-2">
-                            Quality household furniture made with precision and care for your home.
-                          </p>
-                          <button 
-                            onClick={() => handleCategoryClick('684c14969550362979fd95a2', 'Household Furniture')}
-                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
-                          >
-                            View Collection
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
-                        <div className="relative w-full aspect-[4/3] overflow-hidden">
-                          <OptimizedImage 
-                            src={categoryThumbnails['684c14969550362979fd95a3'] || '/placeholders/Office-Products.png'} 
-                            alt="Office Furniture" 
-                            category="Office Furniture"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-2xl font-bold text-primary mb-2">Office Furniture</h3>
-                          <p className="text-text/80 mb-4 line-clamp-2">
-                            Professional office furniture for productive workspaces.
-                          </p>
-                          <button 
-                            onClick={() => handleCategoryClick('684c14969550362979fd95a3', 'Office Furniture')}
-                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
-                          >
-                            View Collection
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
-                        <div className="relative w-full aspect-[4/3] overflow-hidden">
-                          <OptimizedImage 
-                            src={categoryThumbnails['684c14969550362979fd95a4'] || '/placeholders/Commercial-Shelving.png'} 
-                            alt="Commercial Furniture" 
-                            category="Commercial Furniture"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-2xl font-bold text-primary mb-2">Commercial Furniture</h3>
-                          <p className="text-text/80 mb-4 line-clamp-2">
-                            Durable commercial furniture for business environments.
-                          </p>
-                          <button 
-                            onClick={() => handleCategoryClick('684c14969550362979fd95a4', 'Commercial Furniture')}
-                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
-                          >
-                            View Collection
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Desktop & Tablet: Grid Layout */}
-              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {categories && categories.length > 0 ? (
                 categories.map((category, index) => (
                   <div 
@@ -663,8 +535,7 @@ const HomePage = () => {
                   </div>
                 </>
               )}
-              </div>
-            </>
+            </div>
           )}
           
           <div className="flex justify-center mt-10">

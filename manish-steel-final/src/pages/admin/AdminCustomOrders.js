@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrashAlt, FaEye, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import api from '../../services/api';
 
 const AdminCustomOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -32,21 +31,25 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
 
     try {
-      let url = `/custom-orders?page=${currentPage}`;
+      let url = `/api/custom-orders?page=${currentPage}`;
       
       // Add status filter if not 'all'
       if (statusFilter !== 'all') {
         url += `&status=${statusFilter}`;
       }
 
-      const response = await api.get(url);
+      const response = await fetch(url);
       
-      setOrders(response.data.orders || []);
-      setTotalPages(response.data.pagination?.totalPages || 1);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setOrders(data.orders || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (err) {
       console.error('Error fetching custom orders:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to load custom orders. Please try again later.';
-      setError(errorMessage);
+      setError('Failed to load custom orders. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -58,9 +61,17 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
     
     try {
-      const response = await api.put(`/custom-orders/${orderId}`, { 
-        status: newStatus 
+      const response = await fetch(`/api/custom-orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update order: ${response.status}`);
+      }
 
       // Update local state
       setOrders(orders.map(order => 
@@ -75,8 +86,7 @@ const AdminCustomOrders = () => {
       }
     } catch (err) {
       console.error('Error updating order status:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to update order status';
-      setError(errorMessage);
+      setError('Failed to update order status');
     }
   };
 
@@ -90,7 +100,13 @@ const AdminCustomOrders = () => {
     setSuccessMessage('');
 
     try {
-      await api.delete(`/custom-orders/${orderId}`);
+      const response = await fetch(`/api/custom-orders/${orderId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete order: ${response.status}`);
+      }
 
       // Remove from local state
       setOrders(orders.filter(order => order._id !== orderId));
@@ -103,8 +119,7 @@ const AdminCustomOrders = () => {
       }
     } catch (err) {
       console.error('Error deleting order:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to delete order';
-      setError(errorMessage);
+      setError('Failed to delete order');
     }
   };
 

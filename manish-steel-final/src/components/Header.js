@@ -115,7 +115,7 @@ const Header = forwardRef(({ onMenuStateChange }, ref) => {
           {/* Center: Logo */}
           <div className="flex-shrink-0 z-40 absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center" onClick={(e) => handleNavLinkClick(e, '/')}>
-              <img src={newLogo} alt="Shree Manish Steel Furniture Industry" className="h-14" />
+              <img src={newLogo} alt="Shree Manish Steel Furniture Industry" className="h-16" />
             </Link>
           </div>
 
@@ -138,19 +138,19 @@ const Header = forwardRef(({ onMenuStateChange }, ref) => {
           {/* Logo Section - Left */}
           <div className="flex-shrink-0 z-40 w-64">
             <Link to="/" className="flex items-center" onClick={(e) => handleNavLinkClick(e, '/')}>
-              <img src={newLogo} alt="Shree Manish Steel Furniture Industry" className="h-12" />
+              <img src={newLogo} alt="Shree Manish Steel Furniture Industry" className="h-14" />
             </Link>
           </div>
 
           {/* Centered Navigation Links */}
           <nav className="flex-grow flex justify-center">
             <ul className="flex items-center space-x-5">
-              <li><Link to="/" onClick={(e) => handleNavLinkClick(e, '/')} className={`text-sm font-semibold uppercase leading-relaxed tracking-tight transition-colors ${isActive('/') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Home</Link></li>
-              <li><Link to="/products" onClick={(e) => handleNavLinkClick(e, '/products')} className={`text-sm font-semibold uppercase leading-relaxed tracking-tight transition-colors ${isActive('/products') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Products</Link></li> 
-              <li><Link to="/gallery" onClick={(e) => handleNavLinkClick(e, '/gallery')} className={`text-sm font-semibold uppercase leading-relaxed tracking-tight transition-colors ${isActive('/gallery') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Gallery</Link></li>
-              <li><Link to="/about" onClick={(e) => handleNavLinkClick(e, '/about')} className={`text-sm font-semibold uppercase leading-relaxed tracking-tight transition-colors ${isActive('/about') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>About</Link></li>
-              <li><Link to="/contact" onClick={(e) => handleNavLinkClick(e, '/contact')} className={`text-sm font-semibold uppercase leading-relaxed tracking-tight transition-colors ${isActive('/contact') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Contact us</Link></li>
-              <li><Link to="/custom-order" onClick={(e) => handleNavLinkClick(e, '/custom-order')} className="bg-accent text-primary text-sm font-semibold uppercase leading-relaxed tracking-tight px-4 py-2 rounded-md hover:bg-accent/80 transition-colors">Customized Order</Link></li>
+              <li><Link to="/" onClick={(e) => handleNavLinkClick(e, '/')} className={`text-base font-medium uppercase leading-relaxed tracking-tight transition-colors ${isActive('/') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Home</Link></li>
+              <li><Link to="/products" onClick={(e) => handleNavLinkClick(e, '/products')} className={`text-base font-medium uppercase leading-relaxed tracking-tight transition-colors ${isActive('/products') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Products</Link></li> 
+              <li><Link to="/gallery" onClick={(e) => handleNavLinkClick(e, '/gallery')} className={`text-base font-medium uppercase leading-relaxed tracking-tight transition-colors ${isActive('/gallery') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Gallery</Link></li>
+              <li><Link to="/about" onClick={(e) => handleNavLinkClick(e, '/about')} className={`text-base font-medium uppercase leading-relaxed tracking-tight transition-colors ${isActive('/about') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>About</Link></li>
+              <li><Link to="/contact" onClick={(e) => handleNavLinkClick(e, '/contact')} className={`text-base font-medium uppercase leading-relaxed tracking-tight transition-colors ${isActive('/contact') ? 'text-primary border-b-2 border-primary' : 'text-gray-700 hover:text-primary'}`}>Contact us</Link></li>
+              <li><Link to="/custom-order" onClick={(e) => handleNavLinkClick(e, '/custom-order')} className="bg-accent text-primary text-base font-medium uppercase leading-relaxed tracking-tight px-4 py-2 rounded-md hover:bg-accent/80 transition-colors">Customized Order</Link></li>
             </ul>
           </nav>
 
