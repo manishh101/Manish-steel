@@ -11,7 +11,7 @@ const getInitialBaseUrl = () => {
   
   // In production, use the environment variable
   if (process.env.NODE_ENV === 'production') {
-    baseUrl = process.env.REACT_APP_API_URL || 'https://manish-steel-api.onrender.com/api';
+    baseUrl = process.env.REACT_APP_API_URL || 'https://manish-steel-backend.vercel.app/api';
   } else {
     // In development, start with localhost
     baseUrl = 'http://localhost:5000/api';

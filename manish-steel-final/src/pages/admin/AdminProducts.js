@@ -21,18 +21,46 @@ const AdminProducts = () => {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getAll(1, 1000);
-      const products = Array.isArray(response.data) ? response.data : 
-                      response.data?.products ? response.data.products : [];
+      setError(''); // Clear previous errors
       
-      console.log('Loaded products for admin:', products.length, 'products');
-      console.log('Sample product data:', products[0]); // Debug first product structure
+      console.log('🔄 Admin loading products...');
+      
+      // Try to load products with enhanced error handling
+      const response = await productAPI.getAll(1, 1000);
+      
+      console.log('📊 Admin API Response:', response);
+      
+      // Handle different response structures
+      let products = [];
+      if (response?.data) {
+        if (Array.isArray(response.data)) {
+          products = response.data;
+        } else if (response.data.products && Array.isArray(response.data.products)) {
+          products = response.data.products;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          products = response.data.data;
+        }
+      }
+      
+      console.log(`✅ Admin loaded ${products.length} products`);
+      if (products.length > 0) {
+        console.log('📦 Sample product:', {
+          id: products[0]._id || products[0].id,
+          name: products[0].name,
+          image: products[0].image,
+          category: products[0].category
+        });
+      }
       
       setProducts(products);
       setLoading(false);
+      
+      if (products.length === 0) {
+        setError('No products found. The database might be empty or there could be a connection issue.');
+      }
     } catch (err) {
-      console.error('Error loading products:', err);
-      setError('Failed to load products.');
+      console.error('❌ Admin products loading error:', err);
+      setError(`Failed to load products: ${err.message}. Check if the backend server is running.`);
       setProducts([]);
       setLoading(false);
     }
@@ -147,22 +175,73 @@ const AdminProducts = () => {
     return display;
   };
 
+  // Test API connection function
+  const testConnection = async () => {
+    try {
+      console.log('🔍 Testing API connection...');
+      const response = await fetch('http://localhost:5000/api/health');
+      const data = await response.json();
+      console.log('✅ API Connection Test Success:', data);
+      alert(`✅ API Connection Success!\nStatus: ${data.status}\nPort: ${data.port}\nTime: ${data.timestamp}`);
+    } catch (error) {
+      console.error('❌ API Connection Test Failed:', error);
+      alert(`❌ API Connection Failed!\nError: ${error.message}\n\nPlease ensure the backend server is running on port 5000.`);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
         <h1 className="text-xl sm:text-2xl font-bold text-primary">Manage Products</h1>
-        <button 
-          onClick={openAddModal}
-          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center w-full sm:w-auto"
-        >
-          <PlusCircleIcon className="h-5 w-5 mr-2" />
-          Add Product
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button 
+            onClick={testConnection}
+            className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center text-sm"
+            title="Test backend connection"
+          >
+            🔗 Test API
+          </button>
+          <button 
+            onClick={loadProducts}
+            className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center text-sm"
+            disabled={loading}
+          >
+            🔄 Refresh
+          </button>
+          <button 
+            onClick={openAddModal}
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center flex-1 sm:flex-none"
+          >
+            <PlusCircleIcon className="h-5 w-5 mr-2" />
+            Add Product
+          </button>
+        </div>
       </div>
+
+      {/* Debug Panel - only in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-semibold text-yellow-800 mb-2">🔧 Debug Information</h3>
+          <div className="text-xs text-yellow-700 space-y-1">
+            <p>• API URL: {process.env.REACT_APP_API_URL || 'http://localhost:5000/api (default)'}</p>
+            <p>• Products loaded: {products.length}</p>
+            <p>• Loading state: {loading ? 'Yes' : 'No'}</p>
+            <p>• Last error: {error || 'None'}</p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          {error}
+          <strong>Error:</strong> {error}
+          <details className="mt-2">
+            <summary className="cursor-pointer text-sm">🔍 Debug Information</summary>
+            <div className="mt-2 text-xs">
+              <p>• API URL: {process.env.REACT_APP_API_URL || 'Using default/detected URL'}</p>
+              <p>• Environment: {process.env.NODE_ENV || 'development'}</p>
+              <p>• Time: {new Date().toLocaleTimeString()}</p>
+            </div>
+          </details>
         </div>
       )}
 
@@ -216,7 +295,7 @@ const AdminProducts = () => {
           </div>
           
           {/* Desktop table view */}
-          <div className="hidden lg:block bg-white shadow-md rounded-lg overflow-x-auto">
+          <div className="hidden lg:block bg-white rounded-lg overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>

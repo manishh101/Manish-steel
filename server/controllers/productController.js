@@ -253,8 +253,12 @@ exports.filterProducts = async (req, res) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, search } = req.query;
-    const query = {};
+    console.log('getAllProducts called with params:', { page, limit, category, search });
     
+    // Start with empty query
+    let query = {};
+    
+    // Handle category filtering first
     if (category) {
       // Enhanced category filtering to include subcategory products
       if (mongoose.Types.ObjectId.isValid(category)) {
@@ -278,24 +282,40 @@ exports.getAllProducts = async (req, res) => {
         query.category = { $regex: category, $options: 'i' };
       }
     }
-    
+
+    // Handle search filtering
     if (search) {
-      const searchQuery = {
+      console.log('Search query detected:', search);
+      
+      // Create search conditions
+      const searchConditions = {
         $or: [
           { name: { $regex: search, $options: 'i' } },
           { description: { $regex: search, $options: 'i' } }
         ]
       };
       
-      // If we already have a category query, combine them with $and
-      if (query.$or || Object.keys(query).length > 0) {
-        query = { $and: [query, searchQuery] };
+      console.log('Search conditions:', JSON.stringify(searchConditions));
+      
+      // Combine with existing query if needed
+      if (Object.keys(query).length > 0) {
+        // If we already have conditions, wrap everything in $and
+        query = {
+          $and: [
+            query,
+            searchConditions
+          ]
+        };
+        console.log('Combined query with search and category:', JSON.stringify(query));
       } else {
-        query = searchQuery;
+        // If no existing conditions, just use search
+        query = searchConditions;
+        console.log('Search-only query:', JSON.stringify(query));
       }
     }
     
-    // Get products with category details
+    console.log('Final query before database call:', JSON.stringify(query));    // Get products with category details
+    console.log('Executing Product.find with query:', JSON.stringify(query));
     const products = await Product.find(query)
       .populate('categoryId', 'name')
       .populate('subcategoryId', 'name')
@@ -316,8 +336,9 @@ exports.getAllProducts = async (req, res) => {
       totalProducts: count
     });
   } catch (err) {
-    console.error(err.message);
-    return res.status(500).send('Server Error');
+    console.error('Error in getAllProducts:', err);
+    console.error('Error stack:', err.stack);
+    return res.status(500).json({ error: 'Server Error', message: err.message });
   }
 };
 
@@ -512,7 +533,8 @@ exports.getMostSellingProducts = async (req, res) => {
     const { limit = 6 } = req.query;
     console.log('Most selling products API called with limit:', limit);
     
-    const products = await Product.find({ 
+    // First, try to get products marked as most selling
+    let products = await Product.find({ 
       isAvailable: true,
       isMostSelling: true 
     })
@@ -520,6 +542,18 @@ exports.getMostSellingProducts = async (req, res) => {
       .populate('subcategoryId', 'name')
       .sort({ salesCount: -1, rating: -1, dateAdded: -1 })
       .limit(parseInt(limit));
+    
+    // If no most selling products found, fallback to products with highest sales count
+    if (products.length === 0) {
+      console.log('No products marked as most selling, using fallback');
+      products = await Product.find({ isAvailable: true })
+        .populate('categoryId', 'name')
+        .populate('subcategoryId', 'name')
+        .sort({ salesCount: -1, rating: -1, dateAdded: -1 })
+        .limit(parseInt(limit));
+    }
+    
+    console.log(`Found ${products.length} most selling products`);
     
     // Format products for response
     const formattedProducts = products.map(formatProduct);
@@ -548,7 +582,8 @@ exports.getTopProducts = async (req, res) => {
     const { limit = 6 } = req.query;
     console.log('Top products API called with limit:', limit);
     
-    const products = await Product.find({ 
+    // First, try to get products marked as top products
+    let products = await Product.find({ 
       isAvailable: true,
       isTopProduct: true 
     })
@@ -556,6 +591,18 @@ exports.getTopProducts = async (req, res) => {
       .populate('subcategoryId', 'name')
       .sort({ rating: -1, salesCount: -1, dateAdded: -1 })
       .limit(parseInt(limit));
+    
+    // If no top products found, fallback to highly rated products
+    if (products.length === 0) {
+      console.log('No products marked as top products, using fallback');
+      products = await Product.find({ isAvailable: true })
+        .populate('categoryId', 'name')
+        .populate('subcategoryId', 'name')
+        .sort({ rating: -1, salesCount: -1, dateAdded: -1 })
+        .limit(parseInt(limit));
+    }
+    
+    console.log(`Found ${products.length} top products`);
     
     // Format products for response
     const formattedProducts = products.map(formatProduct);

@@ -129,7 +129,7 @@ const FloatingContactWidget = () => {
   ];
 
   return (
-    <div className="fixed md:bottom-6 bottom-20 right-6 md:z-50 z-[60]">
+    <div className="fixed md:bottom-6 bottom-18 right-6 md:z-50 z-[60]">
       <AnimatePresence>
         {isOpen && (
           <motion.div

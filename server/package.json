@@ -4,8 +4,9 @@
   "description": "Backend API for Manish Steel Furniture Website",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node start-server.js",
+    "dev": "nodemon start-server.js",
+    "serverless": "node index.js",
     "init": "node scripts/initAdminUser.js",
     "migrate": "node scripts/migrateData.js",
     "seed-top-products": "node scripts/seedTopProducts.js",

@@ -12,21 +12,13 @@ const ApiHealthCheck = ({ onStatusChange }) => {
         const currentApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
         setApiUrl(currentApiUrl);
         
-        // Fix any malformed URLs
-        let baseUrl = currentApiUrl.replace('/api', '');
+        // Use the full API URL with /health endpoint
+        const healthUrl = `${currentApiUrl}/health`;
         
-        // Ensure properly formatted URL
-        if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-          baseUrl = `https://${baseUrl}`;
-        }
-        
-        // Fix double slashes in the URL (except after protocol)
-        baseUrl = baseUrl.replace(/([^:])\/\//g, '$1/');
-        
-        console.log('API Health Check using URL:', `${baseUrl}/health`);
+        console.log('API Health Check using URL:', healthUrl);
         
         // Try to connect to the health endpoint
-        const response = await axios.get(`${baseUrl}/health`, { 
+        const response = await axios.get(healthUrl, { 
           timeout: 5000 
         });
         

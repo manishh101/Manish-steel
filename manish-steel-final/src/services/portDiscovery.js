@@ -28,7 +28,7 @@ const discoverPort = async () => {
   // If we're in production, use the environment variable
   if (process.env.NODE_ENV === 'production') {
     // Added explicit log for debugging
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://manish-steel-api.onrender.com/api';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://manish-steel-backend.vercel.app/api';
     const sanitizedUrl = sanitizeApiUrl(apiUrl);
     console.log('Production environment detected, using API URL:', sanitizedUrl);
     return sanitizedUrl;

@@ -186,29 +186,52 @@ const ProductsPage = () => {
 
   // --- Minimal, user-friendly header and controls ---
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b bg-primary text-white md:sticky md:top-0 md:z-10">
-        <div className="max-w-7xl mx-auto px-4 py-2 md:py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Shop</h1>
-            {selectedCategory !== 'all' && getCategoryById(selectedCategory) && (
-              <div className="text-white/90 text-sm mt-1">
-                {getCategoryById(selectedCategory)?.name}
-                {selectedSubcategory && getSubcategoryById(selectedCategory, selectedSubcategory) && (
-                  <> &middot; {getSubcategoryById(selectedCategory, selectedSubcategory)?.name}</>
-                )}
-              </div>
-            )}
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Clean Header Section - Like Everest */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold text-gray-900 text-center">SHOP</h1>
+          {selectedCategory !== 'all' && getCategoryById(selectedCategory) && (
+            <div className="text-center text-gray-600 text-sm mt-2">
+              {getCategoryById(selectedCategory)?.name}
+              {selectedSubcategory && getSubcategoryById(selectedCategory, selectedSubcategory) && (
+                <> &middot; {getSubcategoryById(selectedCategory, selectedSubcategory)?.name}</>
+              )}
+            </div>
+          )}
         </div>
         {error && (
-          <div className="max-w-7xl mx-auto px-4 py-2 text-red-100 bg-red-500/20 border-b border-red-300/50 text-sm flex items-center gap-2">
+          <div className="max-w-7xl mx-auto px-4 py-2 text-red-700 bg-red-50 border-t border-red-200 text-sm flex items-center gap-2">
             <FaTimes />
             <span>Error loading products: {error}</span>
           </div>
         )}
       </header>
       
+      {/* Breadcrumb Navigation with Product Count - Like Everest */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            {/* Left: Breadcrumb */}
+            <nav>
+              <div className="flex items-center text-sm text-gray-600">
+                <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+                <span className="mx-2">/</span>
+                <span className="text-gray-900">Shop</span>
+              </div>
+            </nav>
+            
+            {/* Right: Product Count */}
+            <div className="text-sm text-gray-600">
+              {loading ? (
+                'Loading products...'
+              ) : (
+                `Showing ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, filteredProducts.length)} of ${filteredProducts.length} results`
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Mobile Search & Sort Controls - Below Header */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-2">
@@ -376,52 +399,22 @@ const ProductsPage = () => {
 
           {/* Main Content Area */}
           <div className="flex-1">
-            {/* Product Count and Sort Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-              <p className="text-gray-600">
-                {loading ? (
-                  'Loading products...'
-                ) : (
-                  <>
-                    Showing {filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {
-                      Math.min(currentPage * itemsPerPage, filteredProducts.length)
-                    } of {filteredProducts.length} products
-                  </>
-                )}
-              </p>
-              
-              {/* Desktop Sort Controls */}
-              <div className="hidden md:flex items-center gap-2">
-                <span className="text-sm text-gray-600">Sort by:</span>
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
-                >
-                  {sortOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            {/* Enhanced Loading State with skeleton animations */}
+            {/* Enhanced Loading State with clean grid - Like Everest */}
             {loading && (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(8)].map((_, index) => (
                   <div 
                     key={index} 
-                    className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-pulse"
                     style={{animationDelay: `${index * 0.1}s`}}
                   >
-                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 animate-shimmer"></div>
-                    <div className="p-6 space-y-4">
-                      <div className="h-6 bg-gray-200 rounded-lg animate-shimmer"></div>
+                    <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-shimmer"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 bg-gray-200 rounded animate-shimmer"></div>
                       <div className="h-4 bg-gray-200 rounded w-3/4 animate-shimmer"></div>
-                      <div className="h-5 bg-gray-200 rounded w-1/2 animate-shimmer"></div>
-                      <div className="h-10 bg-gray-200 rounded-lg animate-shimmer"></div>
+                      <div className="h-6 bg-gray-200 rounded w-1/2 animate-shimmer"></div>
+                      <div className="h-8 bg-gray-200 rounded animate-shimmer"></div>
                     </div>
                   </div>
                 ))}
@@ -480,13 +473,13 @@ const ProductsPage = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Enhanced Products Grid with staggered animations */}
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+                    {/* Clean Products Grid - Like Everest Website */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                       {currentProducts.map((product, index) => (
                         <div 
                           key={product._id || product.id}
-                          className="animate-fadeIn"
-                          style={{animationDelay: `${index * 0.1}s`}}
+                          className="animate-fadeIn hover:scale-105 transition-transform duration-300"
+                          style={{animationDelay: `${index * 0.05}s`}}
                         >
                           <ProductCard
                             product={product}
@@ -499,20 +492,20 @@ const ProductsPage = () => {
                   </>
                 )}
 
-                {/* Enhanced Pagination */}
+                {/* Clean Pagination - Like Everest */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center mt-16 animate-fadeIn">
-                    <div className="flex items-center space-x-3 bg-white rounded-xl shadow-lg p-2">
+                  <div className="flex justify-center mt-12">
+                    <div className="flex items-center space-x-2 bg-white rounded-lg border border-gray-200 p-1">
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                        className={`px-3 py-2 rounded-md font-medium transition-all duration-200 ${
                           currentPage === 1
                             ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-gray-100 hover:scale-105'
+                            : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                         </svg>
                       </button>
@@ -523,10 +516,10 @@ const ProductsPage = () => {
                           <button
                             key={pageNumber}
                             onClick={() => handlePageChange(pageNumber)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                            className={`px-3 py-2 rounded-md font-medium transition-all duration-200 ${
                               currentPage === pageNumber
-                                ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg transform scale-110'
-                                : 'text-gray-700 hover:bg-gray-100 hover:scale-105'
+                                ? 'bg-primary text-white'
+                                : 'text-gray-700 hover:bg-gray-100'
                             }`}
                           >
                             {pageNumber}
@@ -537,13 +530,13 @@ const ProductsPage = () => {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                        className={`px-3 py-2 rounded-md font-medium transition-all duration-200 ${
                           currentPage === totalPages
                             ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-gray-100 hover:scale-105'
+                            : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                         </svg>
                       </button>

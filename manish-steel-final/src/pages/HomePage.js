@@ -219,6 +219,17 @@ const HomePage = () => {
           <div className="flex flex-col md:flex-row items-center">
             {/* Left Content */}
             <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10 animate-fadeIn">
+              {/* Premium Typography for Shree Manish Steel Furniture Udhyog */}
+              <div className="text-center md:text-left">
+                <p className="text-sm text-primary font-normal tracking-wider uppercase mb-1 animate-fadeIn">
+                  Furniture Udhyog
+                </p>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-none animate-slideInLeft" style={{fontFamily: 'Playfair Display, serif'}}>
+                  Shree Manish Steel
+                </h1>
+              </div>
+              
+              {/* Commented out old content
               <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 animate-slideInLeft">
                 <span className="block mb-2">Furniture for Every Space </span>
                 <span className="text-2xl md:text-3xl text-gray-600">Made in Nepal</span>
@@ -227,18 +238,20 @@ const HomePage = () => {
                 Quality furniture for homes and offices at affordable prices. 
                 Serving Biratnagar and all of Nepal.
               </p>
-              <div className="flex flex-wrap gap-4 animate-slideInLeft" style={{animationDelay: '0.3s'}}>
+              */}
+              
+              <div className="flex flex-wrap gap-4 mt-8 animate-slideInLeft" style={{animationDelay: '0.3s'}}>
                 <Link 
                   to="/products" 
-                  className="bg-primary text-white font-bold px-6 py-3 rounded-md hover:bg-primary/80 transition-all hover:scale-105"
-                  style={{minWidth: '140px', textAlign: 'center'}}
+                  className="bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg"
+                  style={{minWidth: '150px', textAlign: 'center'}}
                 >
-                  Explore Products
+                  View Products
                 </Link>
                 <Link 
                   to="/contact" 
-                  className="bg-white text-primary font-bold px-6 py-3 rounded-md border-2 border-primary hover:bg-primary/10 transition-all hover:scale-105"
-                  style={{minWidth: '140px', textAlign: 'center'}}
+                  className="bg-white text-primary font-semibold px-8 py-3 rounded-lg border-2 border-primary hover:bg-primary/5 transition-all duration-300 shadow-sm"
+                  style={{minWidth: '150px', textAlign: 'center'}}
                 >
                   Contact Us
                 </Link>
@@ -278,51 +291,62 @@ const HomePage = () => {
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
           <ScrollAnimator animation="fadeUp">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Our Steel Furniture in Nepal?</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Us?</h2>
           </ScrollAnimator>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             <ScrollAnimator animation="fadeUp" delay={0.1}>
-              <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-4 mx-auto animate-spin-slow">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-white/10 p-4 md:p-6 rounded-lg backdrop-blur-sm h-full md:h-56 flex flex-col">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-accent rounded-full flex items-center justify-center mb-3 md:mb-4 mx-auto animate-spin-slow flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Premium Quality</h3>
-                <p className="text-center">
-                  Our steel furniture is built to last decades, using premium-grade steel and precision manufacturing. 
-                  Best quality furniture in Biratnagar with lifetime durability guarantee.
+                <h3 className="text-lg md:text-xl font-bold text-center mb-2 flex-shrink-0">Premium Quality</h3>
+                <p className="text-center text-xs md:text-sm flex-grow">
+                  High-grade durable steel furniture built to last.
                 </p>
               </div>
             </ScrollAnimator>
             
             <ScrollAnimator animation="fadeUp" delay={0.2}>
-              <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-4 mx-auto animate-spin-slow">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-white/10 p-4 md:p-6 rounded-lg backdrop-blur-sm h-full md:h-56 flex flex-col">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-accent rounded-full flex items-center justify-center mb-3 md:mb-4 mx-auto animate-spin-slow flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Modern Design</h3>
-                <p className="text-center">
-                  Contemporary and functional designs that blend perfectly with Nepali homes and offices. 
-                  Trendy furniture designs at affordable prices in Nepal.
+                <h3 className="text-lg md:text-xl font-bold text-center mb-2 flex-shrink-0">Modern Design</h3>
+                <p className="text-center text-xs md:text-sm flex-grow">
+                  Contemporary and stylish designs for every space.
                 </p>
               </div>
             </ScrollAnimator>
             
             <ScrollAnimator animation="fadeUp" delay={0.3}>
-              <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-4 mx-auto animate-spin-slow">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-white/10 p-4 md:p-6 rounded-lg backdrop-blur-sm h-full md:h-56 flex flex-col">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-accent rounded-full flex items-center justify-center mb-3 md:mb-4 mx-auto animate-spin-slow flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2">Fast Delivery in Nepal</h3>
-                <p className="text-center">
-                  Quick and reliable furniture delivery service across Nepal. Same-day delivery in Biratnagar, 
-                  next-day delivery to Dharan, Itahari, and professional installation support.
+                <h3 className="text-lg md:text-xl font-bold text-center mb-2 flex-shrink-0">Fast Delivery</h3>
+                <p className="text-center text-xs md:text-sm flex-grow">
+                  Quick and reliable delivery service across Nepal.
+                </p>
+              </div>
+            </ScrollAnimator>
+            
+            <ScrollAnimator animation="fadeUp" delay={0.4}>
+              <div className="bg-white/10 p-4 md:p-6 rounded-lg backdrop-blur-sm h-full md:h-56 flex flex-col">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-accent rounded-full flex items-center justify-center mb-3 md:mb-4 mx-auto animate-spin-slow flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-center mb-2 flex-shrink-0">Customer Support</h3>
+                <p className="text-center text-xs md:text-sm flex-grow">
+                  24/7 dedicated customer support and assistance.
                 </p>
               </div>
             </ScrollAnimator>
@@ -355,7 +379,135 @@ const HomePage = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <>
+              {/* Mobile: Horizontal Scroll Carousel */}
+              <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+                <div className="flex gap-6 pb-4" style={{ scrollSnapType: 'x mandatory' }}>
+                  {categories && categories.length > 0 ? (
+                    categories.map((category, index) => (
+                      <div 
+                        key={category._id || category.id} 
+                        className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]"
+                        style={{ scrollSnapAlign: 'center' }}
+                      >
+                        <div className="relative w-full aspect-[4/3] overflow-hidden">
+                          {categoryThumbnails[category._id || category.id] ? (
+                            <OptimizedImage 
+                              src={categoryThumbnails[category._id || category.id]}
+                              alt={`${category.name} Products`} 
+                              category={category.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center text-gray-400">
+                              Loading products...
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-2xl font-bold text-primary mb-2">{category.name}</h3>
+                          <p className="text-text/80 mb-4 line-clamp-2">
+                            {category.description || `Quality ${category.name.toLowerCase()} made with precision and care for your needs.`}
+                          </p>
+                          <button 
+                            onClick={() => handleCategoryClick(category._id || category.id, category.name)}
+                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
+                          >
+                            View Collection
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    // Fallback categories for mobile
+                    <>
+                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
+                        <div className="relative w-full aspect-[4/3] overflow-hidden">
+                          <OptimizedImage
+                            src={categoryThumbnails['684c14969550362979fd95a2'] || '/placeholders/Household-Furniture.png'}
+                            alt="Household Furniture"
+                            category="Household Furniture"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-2xl font-bold text-primary mb-2">Household Furniture</h3>
+                          <p className="text-text/80 mb-4 line-clamp-2">
+                            Quality household furniture made with precision and care for your home.
+                          </p>
+                          <button 
+                            onClick={() => handleCategoryClick('684c14969550362979fd95a2', 'Household Furniture')}
+                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
+                          >
+                            View Collection
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
+                        <div className="relative w-full aspect-[4/3] overflow-hidden">
+                          <OptimizedImage 
+                            src={categoryThumbnails['684c14969550362979fd95a3'] || '/placeholders/Office-Products.png'} 
+                            alt="Office Furniture" 
+                            category="Office Furniture"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-2xl font-bold text-primary mb-2">Office Furniture</h3>
+                          <p className="text-text/80 mb-4 line-clamp-2">
+                            Professional office furniture for productive workspaces.
+                          </p>
+                          <button 
+                            onClick={() => handleCategoryClick('684c14969550362979fd95a3', 'Office Furniture')}
+                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
+                          >
+                            View Collection
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex-shrink-0 w-[85vw]" style={{ scrollSnapAlign: 'center' }}>
+                        <div className="relative w-full aspect-[4/3] overflow-hidden">
+                          <OptimizedImage 
+                            src={categoryThumbnails['684c14969550362979fd95a4'] || '/placeholders/Commercial-Shelving.png'} 
+                            alt="Commercial Furniture" 
+                            category="Commercial Furniture"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-2xl font-bold text-primary mb-2">Commercial Furniture</h3>
+                          <p className="text-text/80 mb-4 line-clamp-2">
+                            Durable commercial furniture for business environments.
+                          </p>
+                          <button 
+                            onClick={() => handleCategoryClick('684c14969550362979fd95a4', 'Commercial Furniture')}
+                            className="text-primary font-medium hover:text-primary/80 flex items-center group"
+                          >
+                            View Collection
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Desktop & Tablet: Grid Layout */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {categories && categories.length > 0 ? (
                 categories.map((category, index) => (
                   <div 
@@ -511,7 +663,8 @@ const HomePage = () => {
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            </>
           )}
           
           <div className="flex justify-center mt-10">

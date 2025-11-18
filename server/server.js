@@ -58,8 +58,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
      'https://www.manishsteelfurniture.com.np',
      'https://manish-steel-furniture.vercel.app', 
      'https://manish-steel-furniture-m9ayaff4c-manishh101s-projects.vercel.app',
-     'https://manish-steel-furniture-git-main-manishh101s-projects.vercel.app',
-     'https://manish-steel-furniture.onrender.com'];
+     'https://manish-steel-furniture-git-main-manishh101s-projects.vercel.app'];
 
 // Log the allowed origins for debugging
 console.log(`CORS configured with allowed origins: ${JSON.stringify(allowedOrigins)}`);
@@ -120,9 +119,10 @@ app.get('/', (req, res) => {
 
 // Port discovery endpoint
 app.get('/port', (req, res) => {
+  const port = process.env.PORT || 5000;
   res.json({ 
-    port: PORT,
-    baseUrl: `http://localhost:${PORT}/api`
+    port: port,
+    baseUrl: `http://localhost:${port}/api`
   });
 });
 
@@ -139,7 +139,7 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: process.env.PORT || 5000
   });
 });
 
@@ -148,7 +148,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: process.env.PORT || 5000
   });
 });
 

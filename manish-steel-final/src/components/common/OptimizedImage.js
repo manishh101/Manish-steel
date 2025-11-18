@@ -147,7 +147,7 @@ const OptimizedImage = ({
       )}
 
       {/* Main image */}
-      {imageState.currentSrc && (
+      {imageState.currentSrc && imageState.currentSrc.trim() !== '' && (
         <img
           src={imageState.currentSrc}
           srcSet={lazy ? undefined : ImageService.generateSrcSet(src, { category })}

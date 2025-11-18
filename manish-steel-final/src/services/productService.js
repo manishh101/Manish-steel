@@ -58,14 +58,14 @@ export const productAPI = {
    * @param {number} limit - Number of products to fetch (default: 6)
    * @returns {Promise} - Response with featured products
    */
-  getTopProducts: (limit = 6) => apiClient.get('/products/featured', { params: { limit } }),
+  getTopProducts: (limit = 6) => apiClient.get('/products/top-products', { params: { limit } }),
 
   /**
    * Get most selling products (by sales data)
    * @param {number} limit - Number of products to fetch (default: 6)
    * @returns {Promise} - Response with best selling products
    */
-  getMostSellingProducts: (limit = 6) => apiClient.get('/products/best-selling', { params: { limit } }),
+  getMostSellingProducts: (limit = 6) => apiClient.get('/products/most-selling', { params: { limit } }),
 
   /**
    * Update product featured status (admin only)

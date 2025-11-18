@@ -62,7 +62,7 @@ export const sanitizeApiUrl = (url) => {
 export const getBaseApiUrl = () => {
   // In production, use the environment variable
   if (process.env.NODE_ENV === 'production') {
-    return sanitizeApiUrl(process.env.REACT_APP_API_URL || 'https://manish-steel-api.onrender.com/api');
+    return sanitizeApiUrl(process.env.REACT_APP_API_URL || 'https://manish-steel-backend.vercel.app/api');
   }
   
   // In development, start with localhost

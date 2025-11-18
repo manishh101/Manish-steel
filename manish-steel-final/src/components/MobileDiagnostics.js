@@ -37,7 +37,7 @@ const MobileDiagnostics = ({ show = true }) => {
         const apiBaseUrl = process.env.REACT_APP_API_URL || 
                           ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
                            ? 'http://localhost:5000/api' 
-                           : 'https://manish-steel-api.onrender.com/api');
+                           : 'https://manish-steel-backend.vercel.app/api');
         
         // Check general products endpoint
         try {

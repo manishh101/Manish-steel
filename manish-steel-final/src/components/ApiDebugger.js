@@ -20,9 +20,9 @@ const ApiDebugger = () => {
       
       // Test multiple URL configurations
       const apiUrls = [
-        process.env.REACT_APP_API_URL || 'https://manish-steel-api.onrender.com/api',
-        'https://manish-steel-api.onrender.com/api',
-        sanitizeApiUrl(process.env.REACT_APP_API_URL || 'https://manish-steel-api.onrender.com/api')
+        process.env.REACT_APP_API_URL || 'https://manish-steel-backend.vercel.app/api',
+        'https://manish-steel-backend.vercel.app/api',
+        sanitizeApiUrl(process.env.REACT_APP_API_URL || 'https://manish-steel-backend.vercel.app/api')
       ];
       
       testResults.urlTests = [];

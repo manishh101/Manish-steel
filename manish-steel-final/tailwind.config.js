@@ -16,6 +16,7 @@ module.exports = {
       fontFamily: {
         heading: ['Poppins', 'Lato', 'Roboto', 'sans-serif'],
         body: ['Open Sans', 'Noto Sans', 'sans-serif'],
+        montserrat: ['Montserrat', 'sans-serif'],
       },
     },
   },

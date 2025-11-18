@@ -1145,7 +1145,7 @@ const GalleryPage = () => {
           {/* Products Grid */}
           <AnimatePresence mode="wait">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <motion.div
                     key={`skeleton-${index}`}
@@ -1220,7 +1220,7 @@ const GalleryPage = () => {
               </motion.div>
             ) : (
               <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                 variants={animations.container}
                 initial="hidden"
                 animate="visible"

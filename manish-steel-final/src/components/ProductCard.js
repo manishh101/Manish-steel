@@ -103,14 +103,14 @@ const ProductCard = ({
     switch (variant) {
       case 'featured':
         return {
-          cardClass: 'hover:shadow-xl hover:-translate-y-1',
-          buttonClass: 'bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition-colors flex items-center gap-2 text-sm',
+          cardClass: 'hover:shadow-lg hover:-translate-y-1',
+          buttonClass: 'bg-primary text-white px-3 py-1.5 rounded-md hover:bg-primary/80 transition-colors flex items-center gap-1.5 text-xs',
           buttonText: 'View Details'
         };
       case 'bestseller':
         return {
-          cardClass: 'hover:shadow-xl hover:-translate-y-2 border-2 border-transparent hover:border-orange-200',
-          buttonClass: 'bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex items-center gap-2 text-sm font-semibold transform hover:scale-105',
+          cardClass: 'hover:shadow-lg hover:-translate-y-2 border-2 border-transparent hover:border-orange-200',
+          buttonClass: 'bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-md hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex items-center gap-1.5 text-xs font-semibold transform hover:scale-105',
           buttonText: 'View Details'
         };
       case 'gallery':
@@ -120,8 +120,8 @@ const ProductCard = ({
         };
       default:
         return {
-          cardClass: 'hover:shadow-xl',
-          buttonClass: 'text-primary font-medium hover:text-primary/80 flex items-center group',
+          cardClass: 'hover:shadow-lg',
+          buttonClass: 'text-gray-500 font-medium hover:text-primary/80 flex items-center group text-xs',
           buttonText: 'View Details'
         };
     }
@@ -130,9 +130,9 @@ const ProductCard = ({
   const config = getVariantConfig();
 
   return (
-    <div className={`product-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 border border-gray-100 group ${config.cardClass} ${className}`}>
-      {/* Image container */}
-      <div className="relative w-full aspect-square overflow-hidden bg-gray-100">
+    <div className={`product-card bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 border border-gray-100 group h-full flex flex-col ${config.cardClass} ${className}`}>
+      {/* Image container - much larger like reference */}
+      <div className="relative w-full overflow-hidden bg-gray-100" style={{aspectRatio: '4/5'}}>
         {/* Loading skeleton */}
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
@@ -237,66 +237,78 @@ const ProductCard = ({
           )}
         </div>
       ) : (
-        /* Full layout for other variants */
-        <div className="p-4 sm:p-6">
-          {showCategory && safeProduct.category && !config.hideCategory && (
-            <div className="mb-1">
-              <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-                {safeProduct.subcategory || safeProduct.category}
+        /* Full layout - compact text area like reference */
+        <div className="p-3 flex-1 flex flex-col justify-between"
+             style={{minHeight: '80px'}}>
+          {showCategory && !config.hideCategory && (
+            <div style={{marginBottom: '1px'}}>
+              <span className="text-xs text-gray-400 uppercase tracking-wide font-light" style={{fontSize: '9px'}}>
+                {safeProduct.subcategory || 
+                 safeProduct.productType ||
+                 (safeProduct.name?.includes('Wardrobe') ? 'Wardrobe' :
+                  safeProduct.name?.includes('Almirah') ? 'Almirah' :
+                  safeProduct.name?.includes('Table') ? 'Table' :
+                  safeProduct.name?.includes('Chair') ? 'Chair' :
+                  safeProduct.name?.includes('Bed') ? 'Bed' :
+                  safeProduct.name?.includes('Door') ? 'Door' :
+                  'Steel Furniture')}
               </span>
             </div>
           )}
           
           <Link to={`/products/${safeProduct._id || safeProduct.id}`} onClick={handleProductClick} className="block">
-            <h3 className="text-sm sm:text-lg font-semibold text-gray-800 hover:text-primary transition-colors mb-2 line-clamp-2 leading-tight">
+            <h3 className="text-sm font-medium text-gray-800 hover:text-primary transition-colors line-clamp-2 leading-tight" style={{marginBottom: '2px'}}>
               {safeProduct.name || safeProduct.title}
             </h3>
           </Link>
 
           {safeProduct.description && (variant === 'featured' || variant === 'bestseller') && (
-            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+            <p className="text-gray-600 text-sm line-clamp-2" style={{marginBottom: '4px'}}>
               {safeProduct.description}
             </p>
           )}
 
-          {/* Standard variant button */}
-          {variant === 'standard' && (
-            <button 
-              onClick={handleProductClick}
-              className={config.buttonClass}
-            >
-              {config.buttonText}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+          {/* Button container - pushed to bottom */}
+          <div className="mt-auto">
+            {/* Standard variant button */}
+            {variant === 'standard' && (
+              <button 
+                onClick={handleProductClick}
+                className={config.buttonClass}
+              >
+                {config.buttonText}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
 
-          {/* Featured variant button */}
-          {variant === 'featured' && (
-            <button 
-              onClick={handleProductClick}
-              className={config.buttonClass}
-            >
-              {config.buttonText}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+              {/* Featured variant button */}
+            {variant === 'featured' && (
+              <button 
+                onClick={handleProductClick}
+                className={config.buttonClass}
+              >
+                {config.buttonText}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
 
-          {/* Bestseller variant button */}
-          {variant === 'bestseller' && (
-            <button 
-              onClick={handleProductClick}
-              className={config.buttonClass}
-            >
-              {config.buttonText}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+            {/* Bestseller variant button */}
+            {variant === 'bestseller' && (
+              <button 
+                onClick={handleProductClick}
+                className={config.buttonClass}
+              >
+                {config.buttonText}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 transform transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
