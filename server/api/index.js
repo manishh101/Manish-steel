@@ -34,16 +34,20 @@ const connectDB = async () => {
     console.log('✅ MongoDB connected successfully');
 
     // Check and run seeders if needed (only on first connection)
-    const Product = require('../models/Product');
-    const existingProducts = await Product.find().limit(1);
-    
-    if (existingProducts.length === 0 && process.env.RUN_SEEDERS !== 'false') {
-      console.log('Running initial database seeding...');
-      const runSeeders = require('../seeders');
-      await runSeeders();
-      console.log('Database seeding completed');
-    } else {
-      console.log(`Database has ${existingProducts.length > 0 ? 'existing' : 'no'} products`);
+    try {
+      const Product = require('../models/Product');
+      const existingProducts = await Product.find().limit(1);
+      
+      if (existingProducts.length === 0 && process.env.RUN_SEEDERS === 'true') {
+        console.log('Running initial database seeding...');
+        const runSeeders = require('../seeders');
+        await runSeeders();
+        console.log('Database seeding completed');
+      } else {
+        console.log(`Database has ${existingProducts.length > 0 ? 'existing' : 'no'} products`);
+      }
+    } catch (seederError) {
+      console.log('Skipping seeders:', seederError.message);
     }
 
   } catch (error) {

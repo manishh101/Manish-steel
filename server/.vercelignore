@@ -39,9 +39,7 @@ build/
 .DS_Store
 Thumbs.db
 
-# Scripts that are not needed in production
-scripts/
-seeders/
+# Scripts that are not needed in production (except seeders - needed for first run)
 check-optimization-status.sh
 deploy-to-vercel.sh
 
