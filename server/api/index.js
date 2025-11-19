@@ -2,7 +2,7 @@
  * Server entry point for Vercel Serverless
  */
 
-const app = require('./server');
+const app = require('../server');
 const mongoose = require('mongoose');
 
 // Database connection flag
@@ -34,12 +34,12 @@ const connectDB = async () => {
     console.log('✅ MongoDB connected successfully');
 
     // Check and run seeders if needed (only on first connection)
-    const Product = require('./models/Product');
+    const Product = require('../models/Product');
     const existingProducts = await Product.find().limit(1);
     
     if (existingProducts.length === 0 && process.env.RUN_SEEDERS !== 'false') {
       console.log('Running initial database seeding...');
-      const runSeeders = require('./seeders');
+      const runSeeders = require('../seeders');
       await runSeeders();
       console.log('Database seeding completed');
     } else {
