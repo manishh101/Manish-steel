@@ -10,7 +10,8 @@
     "init": "node scripts/initAdminUser.js",
     "migrate": "node scripts/migrateData.js",
     "seed-top-products": "node scripts/seedTopProducts.js",
-    "vercel-build": "echo 'Vercel build step'"
+    "vercel-build": "echo 'Vercel build step'",
+    "build": "echo 'Build completed'"
   },
   "dependencies": {
     "axios": "^1.9.0",

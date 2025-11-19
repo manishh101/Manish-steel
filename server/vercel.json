@@ -2,45 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/health",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/port",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/uploads/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/public/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api/index.js"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, Accept, X-Requested-With" },
-        { "key": "Access-Control-Allow-Credentials", "value": "true" }
-      ]
+      "dest": "/api/[...all].js"
     }
   ]
 }
