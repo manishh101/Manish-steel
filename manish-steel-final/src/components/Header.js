@@ -90,7 +90,7 @@ const Header = forwardRef(({ onMenuStateChange }, ref) => {
 
   return (
     <header 
-      className={`bg-background backdrop-blur-md z-30 transition-all duration-300 ease-out fixed top-0 left-0 right-0 border-b border-gray-100/50 ${
+      className={`bg-white/95 backdrop-blur-md z-30 transition-all duration-300 ease-out fixed top-0 left-0 right-0 border-b border-gray-100/50 ${
         isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
