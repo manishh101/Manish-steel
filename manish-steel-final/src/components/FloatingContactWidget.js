@@ -129,7 +129,7 @@ const FloatingContactWidget = () => {
   ];
 
   return (
-    <div className="fixed md:bottom-6 bottom-18 right-6 md:z-50 z-[60]">
+    <div className="fixed bottom-16 md:bottom-6 right-4 md:right-6 z-[9999]">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -137,7 +137,7 @@ const FloatingContactWidget = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute md:bottom-20 bottom-20 right-0 flex flex-col space-y-3 mb-4"
+            className="absolute bottom-20 right-0 flex flex-col space-y-3 mb-4"
           >
             {contactOptions.map((option, index) => (
               <motion.button
@@ -163,7 +163,7 @@ const FloatingContactWidget = () => {
 
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 md:w-18 md:h-18 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-105 relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700"
+        className="w-14 h-14 md:w-16 md:h-16 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-105 relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0 }}
@@ -175,9 +175,9 @@ const FloatingContactWidget = () => {
           transition={{ duration: 0.3 }}
         >
           {isOpen ? (
-            <XMarkIcon className="w-7 h-7 md:w-8 md:h-8" />
+            <XMarkIcon className="w-6 h-6 md:w-7 md:h-7" />
           ) : (
-            <ChatBubbleLeftRightIcon className="w-7 h-7 md:w-8 md:h-8" />
+            <ChatBubbleLeftRightIcon className="w-6 h-6 md:w-7 md:h-7" />
           )}
         </motion.div>
       </motion.button>
